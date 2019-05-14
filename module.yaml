@@ -10,6 +10,9 @@ notests *default:
 
   deps:
     - vostok.devtools
+    - vostok.logging.abstractions
+    - vostok.hercules.client.abstractions
+    - vostok.zookeeper.client.abstractions
 
 full-build > notests:
   build:
