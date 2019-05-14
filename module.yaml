@@ -1,0 +1,17 @@
+notests *default:
+  build:
+    target: Vostok.Hercules.Consumers.sln
+    configuration: NoTests
+    tool:
+      name: dotnet
+
+  install:
+    - Vostok.Hercules.Consumers/bin/Release/netstandard2.0/Vostok.Hercules.Consumers.dll
+
+  deps:
+    - vostok.devtools
+
+full-build > notests:
+  build:
+    target: Vostok.Hercules.Consumers.sln
+    configuration: Release
