@@ -13,6 +13,7 @@ notests *default:
     - vostok.logging.abstractions
     - vostok.hercules.client.abstractions
     - vostok.zookeeper.client.abstractions
+    - vostok.commons.helpers/src
 
 full-build > notests:
   build:
