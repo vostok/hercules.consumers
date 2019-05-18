@@ -3,8 +3,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Vostok.Commons.Helpers.Extensions;
+using Vostok.Hercules.Client.Abstractions.Models;
 using Vostok.Hercules.Client.Abstractions.Queries;
+using Vostok.Hercules.Consumers.Helpers;
 using Vostok.Logging.Abstractions;
+
+// ReSharper disable MethodSupportsCancellation
+
+#pragma warning disable 4014
 
 namespace Vostok.Hercules.Consumers
 {
@@ -22,30 +28,45 @@ namespace Vostok.Hercules.Consumers
 
         public async Task RunAsync(CancellationToken cancellationToken)
         {
+            var coordinates = null as StreamCoordinates;
+            var shardingSettings = null as StreamShardingSettings;
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    var currentCoordinates = await settings.CoordinatesStorage.GetCurrentAsync().ConfigureAwait(false);
-                    var currentShardingSettings = settings.ShardingSettingsProvider();
+                    // (iloktionov): Catch-up with state for other shards on any change to our sharding settings:
+                    var newShardingSettings = settings.ShardingSettingsProvider();
+                    if (shardingSettings == null || !shardingSettings.Equals(newShardingSettings))
+                    {
+                        log.Info("Observed new sharding settings: shard with index {ShardIndex} from {ShardCount}. Syncing coordinates.",
+                            newShardingSettings.ClientShardIndex, newShardingSettings.ClientShardCount);
+
+                        coordinates = StreamCoordinatesMerger.Merge(
+                            coordinates ?? StreamCoordinates.Empty,
+                            await settings.CoordinatesStorage.GetCurrentAsync().ConfigureAwait(false));
+
+                        log.Info("Updated coordinates from storage: {StreamCoordinates}", coordinates);
+
+                        shardingSettings = newShardingSettings;
+                    }
 
                     log.Info("Reading logical shard with index {ClientShard} from {ClientShardCount}.",
-                        currentShardingSettings.ClientShardIndex, currentShardingSettings.ClientShardCount);
+                        shardingSettings.ClientShardIndex, shardingSettings.ClientShardCount);
 
-                    log.Debug("Current coordinates: {StreamCoordinates}", currentCoordinates);
+                    log.Debug("Current coordinates: {StreamCoordinates}", coordinates);
 
                     var eventsQuery = new ReadStreamQuery(settings.StreamName)
                     {
-                        Coordinates = currentCoordinates,
-                        ClientShard = currentShardingSettings.ClientShardIndex,
-                        ClientShardCount = currentShardingSettings.ClientShardCount,
+                        Coordinates = coordinates,
+                        ClientShard = shardingSettings.ClientShardIndex,
+                        ClientShardCount = shardingSettings.ClientShardCount,
                         Limit = settings.EventsBatchSize
                     };
 
                     var readResult = await settings.StreamClient.ReadAsync(eventsQuery, settings.EventsReadTimeout, cancellationToken).ConfigureAwait(false);
-                    var events = readResult.Payload.Events;
-                    var newCoordinates = readResult.Payload.Next;
 
+                    var events = readResult.Payload.Events;
                     if (events.Count == 0)
                     {
                         await Task.Delay(settings.DelayOnNoEvents, cancellationToken).ConfigureAwait(false);
@@ -56,7 +77,9 @@ namespace Vostok.Hercules.Consumers
 
                     await settings.EventsHandler.HandleAsync(events, cancellationToken).ConfigureAwait(false);
 
-                    await settings.CoordinatesStorage.AdvanceAsync(newCoordinates).ConfigureAwait(false);
+                    var newCoordinates = coordinates = StreamCoordinatesMerger.Merge(coordinates, readResult.Payload.Next);
+
+                    Task.Run(() => settings.CoordinatesStorage.AdvanceAsync(newCoordinates));
                 }
                 catch (Exception error)
                 {
