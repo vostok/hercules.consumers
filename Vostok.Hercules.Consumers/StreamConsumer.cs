@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -55,7 +54,7 @@ namespace Vostok.Hercules.Consumers
 
                     log.Info("Read {EventsCount} event(s) from Hercules stream '{StreamName}'.", events.Count, settings.StreamName);
 
-                    await settings.EventsHandler.HandleAsync(events).ConfigureAwait(false);
+                    await settings.EventsHandler.HandleAsync(events, cancellationToken).ConfigureAwait(false);
 
                     await settings.CoordinatesStorage.AdvanceAsync(currentCoordinates, newCoordinates).ConfigureAwait(false);
                 }
