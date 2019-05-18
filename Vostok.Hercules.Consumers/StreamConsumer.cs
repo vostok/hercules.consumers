@@ -30,11 +30,10 @@ namespace Vostok.Hercules.Consumers
                     var currentCoordinates = await settings.CoordinatesStorage.GetCurrentAsync().ConfigureAwait(false);
                     var currentShardingSettings = settings.ShardingSettingsProvider();
 
-                    log.Debug("Reading logical shard with index {ClientShard} from {ClientShardCount}.",
+                    log.Info("Reading logical shard with index {ClientShard} from {ClientShardCount}.",
                         currentShardingSettings.ClientShardIndex, currentShardingSettings.ClientShardCount);
 
-                    log.Debug("Current coordinates: {StreamCoordinates}",
-                        string.Join(", ", currentCoordinates.Positions.Select(p => $"{p.Partition} --> {p.Offset}")));
+                    log.Debug("Current coordinates: {StreamCoordinates}", currentCoordinates);
 
                     var eventsQuery = new ReadStreamQuery(settings.StreamName)
                     {
