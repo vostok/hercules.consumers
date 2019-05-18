@@ -56,7 +56,7 @@ namespace Vostok.Hercules.Consumers
 
                     await settings.EventsHandler.HandleAsync(events, cancellationToken).ConfigureAwait(false);
 
-                    await settings.CoordinatesStorage.AdvanceAsync(currentCoordinates, newCoordinates).ConfigureAwait(false);
+                    await settings.CoordinatesStorage.AdvanceAsync(newCoordinates).ConfigureAwait(false);
                 }
                 catch (Exception error)
                 {

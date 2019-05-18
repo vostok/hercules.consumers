@@ -11,6 +11,6 @@ namespace Vostok.Hercules.Consumers
         Task<StreamCoordinates> GetCurrentAsync();
 
         [NotNull]
-        Task AdvanceAsync([NotNull] StreamCoordinates before, [NotNull] StreamCoordinates after);
+        Task AdvanceAsync([NotNull] StreamCoordinates to);
     }
 }
