@@ -16,7 +16,7 @@ namespace Vostok.Hercules.Consumers
         public InMemoryCoordinatesStorage(StreamCoordinates initialCoordinates) => coordinates = initialCoordinates;
 
         public InMemoryCoordinatesStorage()
-            : this(new StreamCoordinates(Array.Empty<StreamPosition>()))
+            : this(StreamCoordinates.Empty)
         {
         }
 
