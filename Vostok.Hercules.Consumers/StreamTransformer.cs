@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Vostok.Hercules.Client.Abstractions.Events;
+using Vostok.Hercules.Client.Abstractions.Models;
 using Vostok.Hercules.Client.Abstractions.Queries;
 using Vostok.Logging.Abstractions;
 
@@ -55,7 +56,7 @@ namespace Vostok.Hercules.Consumers
                 buffer = new List<HerculesEvent>();
             }
 
-            public async Task HandleAsync(IList<HerculesEvent> events, CancellationToken cancellationToken)
+            public async Task HandleAsync(StreamCoordinates _, IList<HerculesEvent> events, CancellationToken cancellationToken)
             {
                 var resultingEvents = events as IEnumerable<HerculesEvent>;
 

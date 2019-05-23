@@ -75,11 +75,12 @@ namespace Vostok.Hercules.Consumers
 
                     log.Info("Read {EventsCount} event(s) from Hercules stream '{StreamName}'.", events.Count, settings.StreamName);
 
-                    await settings.EventsHandler.HandleAsync(events, cancellationToken).ConfigureAwait(false);
+                    await settings.EventsHandler.HandleAsync(coordinates, events, cancellationToken).ConfigureAwait(false);
 
                     var newCoordinates = coordinates = StreamCoordinatesMerger.Merge(coordinates, readResult.Payload.Next);
 
-                    Task.Run(() => settings.CoordinatesStorage.AdvanceAsync(newCoordinates));
+                    if (settings.AutoSaveCoordinates)
+                        Task.Run(() => settings.CoordinatesStorage.AdvanceAsync(newCoordinates));
                 }
                 catch (Exception error)
                 {
