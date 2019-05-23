@@ -64,7 +64,7 @@ namespace Vostok.Hercules.Consumers
                     resultingEvents = resultingEvents.Where(settings.Filter);
 
                 if (settings.Transformer != null)
-                    resultingEvents = resultingEvents.SelectMany(settings.Transformer);
+                    resultingEvents = resultingEvents.SelectMany(Transform);
 
                 buffer.Clear();
                 buffer.AddRange(resultingEvents);
@@ -83,6 +83,19 @@ namespace Vostok.Hercules.Consumers
                 log.Info("Inserted {EventsCount} event(s) into target stream '{TargetStream}'.", buffer.Count, settings.TargetStreamName);
 
                 buffer.Clear();
+            }
+
+            private IEnumerable<HerculesEvent> Transform(HerculesEvent @event)
+            {
+                try
+                {
+                    return settings.Transformer?.Invoke(@event) ?? Array.Empty<HerculesEvent>();
+                }
+                catch(Exception error)
+                {
+                    log.Warn(error);
+                    return Array.Empty<HerculesEvent>();
+                }
             }
         }
     }
