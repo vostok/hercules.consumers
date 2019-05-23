@@ -10,11 +10,11 @@ namespace Vostok.Hercules.Consumers
     public class StreamTransformerSettings
     {
         public StreamTransformerSettings(
-            [NotNull] string sourceStreamName, 
-            [NotNull] string targetStreamName, 
-            [NotNull] IHerculesStreamClient streamClient, 
-            [NotNull] IHerculesGateClient gateClient, 
-            [NotNull] IStreamCoordinatesStorage coordinatesStorage, 
+            [NotNull] string sourceStreamName,
+            [NotNull] string targetStreamName,
+            [NotNull] IHerculesStreamClient streamClient,
+            [NotNull] IHerculesGateClient gateClient,
+            [NotNull] IStreamCoordinatesStorage coordinatesStorage,
             [NotNull] Func<StreamShardingSettings> shardingSettingsProvider)
         {
             SourceStreamName = sourceStreamName ?? throw new ArgumentNullException(nameof(sourceStreamName));

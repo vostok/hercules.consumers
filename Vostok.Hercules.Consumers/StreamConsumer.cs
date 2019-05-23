@@ -39,8 +39,10 @@ namespace Vostok.Hercules.Consumers
                     var newShardingSettings = settings.ShardingSettingsProvider();
                     if (shardingSettings == null || !shardingSettings.Equals(newShardingSettings))
                     {
-                        log.Info("Observed new sharding settings: shard with index {ShardIndex} from {ShardCount}. Syncing coordinates.",
-                            newShardingSettings.ClientShardIndex, newShardingSettings.ClientShardCount);
+                        log.Info(
+                            "Observed new sharding settings: shard with index {ShardIndex} from {ShardCount}. Syncing coordinates.",
+                            newShardingSettings.ClientShardIndex,
+                            newShardingSettings.ClientShardCount);
 
                         coordinates = StreamCoordinatesMerger.Merge(
                             coordinates ?? StreamCoordinates.Empty,
@@ -51,8 +53,10 @@ namespace Vostok.Hercules.Consumers
                         shardingSettings = newShardingSettings;
                     }
 
-                    log.Info("Reading logical shard with index {ClientShard} from {ClientShardCount}.",
-                        shardingSettings.ClientShardIndex, shardingSettings.ClientShardCount);
+                    log.Info(
+                        "Reading logical shard with index {ClientShard} from {ClientShardCount}.",
+                        shardingSettings.ClientShardIndex,
+                        shardingSettings.ClientShardCount);
 
                     log.Debug("Current coordinates: {StreamCoordinates}", coordinates);
 

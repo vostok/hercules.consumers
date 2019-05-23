@@ -28,7 +28,7 @@ namespace Vostok.Hercules.Consumers
         #region Equality 
 
         public bool Equals(StreamShardingSettings other)
-           => ClientShardIndex == other?.ClientShardIndex && ClientShardCount == other?.ClientShardCount;
+            => ClientShardIndex == other?.ClientShardIndex && ClientShardCount == other?.ClientShardCount;
 
         public override bool Equals(object obj)
             => Equals(obj as StreamShardingSettings);
@@ -39,7 +39,7 @@ namespace Vostok.Hercules.Consumers
             {
                 return (ClientShardIndex * 397) ^ ClientShardCount;
             }
-        } 
+        }
 
         #endregion
     }

@@ -43,11 +43,12 @@ namespace Vostok.Hercules.Consumers.Helpers
                 if (separatorIndex <= 0)
                     continue;
 
-                positions.Add(new StreamPosition
-                {
-                    Partition = int.Parse(line.Substring(0, separatorIndex).Trim()),
-                    Offset = int.Parse(line.Substring(separatorIndex + 1).Trim())
-                });
+                positions.Add(
+                    new StreamPosition
+                    {
+                        Partition = int.Parse(line.Substring(0, separatorIndex).Trim()),
+                        Offset = int.Parse(line.Substring(separatorIndex + 1).Trim())
+                    });
             }
 
             return new StreamCoordinates(positions.ToArray());

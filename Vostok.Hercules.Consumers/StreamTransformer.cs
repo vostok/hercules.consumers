@@ -26,10 +26,10 @@ namespace Vostok.Hercules.Consumers
         public Task RunAsync(CancellationToken cancellationToken)
         {
             var consumerSettings = new StreamConsumerSettings(
-                settings.SourceStreamName, 
-                settings.StreamClient, 
-                new TransformingEventHandler(settings, log), 
-                settings.CoordinatesStorage, 
+                settings.SourceStreamName,
+                settings.StreamClient,
+                new TransformingEventHandler(settings, log),
+                settings.CoordinatesStorage,
                 settings.ShardingSettingsProvider)
             {
                 EventsBatchSize = settings.EventsBatchSize,
