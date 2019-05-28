@@ -71,13 +71,18 @@ namespace Vostok.Hercules.Consumers
                     var readResult = await settings.StreamClient.ReadAsync(eventsQuery, settings.EventsReadTimeout, cancellationToken).ConfigureAwait(false);
 
                     var events = readResult.Payload.Events;
+                    log.Info(
+                        "Read {EventsCount} event(s) from Hercules stream '{StreamName}' with shard index {ClientShard} from {ClientShardCount}.",
+                        events.Count,
+                        settings.StreamName,
+                        eventsQuery.ClientShard,
+                        eventsQuery.ClientShardCount);
+
                     if (events.Count == 0)
                     {
                         await Task.Delay(settings.DelayOnNoEvents, cancellationToken).ConfigureAwait(false);
                         continue;
                     }
-
-                    log.Info("Read {EventsCount} event(s) from Hercules stream '{StreamName}'.", events.Count, settings.StreamName);
 
                     await settings.EventsHandler.HandleAsync(coordinates, events, cancellationToken).ConfigureAwait(false);
 
