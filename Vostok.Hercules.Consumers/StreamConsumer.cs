@@ -72,11 +72,9 @@ namespace Vostok.Hercules.Consumers
 
                     var events = readResult.Payload.Events;
                     log.Info(
-                        "Read {EventsCount} event(s) from Hercules stream '{StreamName}' with shard index {ClientShard} from {ClientShardCount}.",
+                        "Read {EventsCount} event(s) from Hercules stream '{StreamName}'.",
                         events.Count,
-                        settings.StreamName,
-                        eventsQuery.ClientShard,
-                        eventsQuery.ClientShardCount);
+                        settings.StreamName);
 
                     if (events.Count == 0)
                     {
