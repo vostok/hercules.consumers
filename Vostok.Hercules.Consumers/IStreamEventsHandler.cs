@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Vostok.Hercules.Client.Abstractions.Events;
-using Vostok.Hercules.Client.Abstractions.Models;
+using Vostok.Hercules.Client.Abstractions.Queries;
 
 namespace Vostok.Hercules.Consumers
 {
@@ -11,6 +11,6 @@ namespace Vostok.Hercules.Consumers
     public interface IStreamEventsHandler
     {
         [NotNull]
-        Task HandleAsync([NotNull] StreamCoordinates coordinates, [NotNull] IList<HerculesEvent> events, CancellationToken cancellationToken);
+        Task HandleAsync([NotNull] ReadStreamQuery query, [NotNull] IList<HerculesEvent> events, CancellationToken cancellationToken);
     }
 }

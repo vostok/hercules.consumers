@@ -56,7 +56,7 @@ namespace Vostok.Hercules.Consumers
                 buffer = new List<HerculesEvent>();
             }
 
-            public async Task HandleAsync(StreamCoordinates _, IList<HerculesEvent> events, CancellationToken cancellationToken)
+            public async Task HandleAsync(ReadStreamQuery query, IList<HerculesEvent> events, CancellationToken cancellationToken)
             {
                 var resultingEvents = events as IEnumerable<HerculesEvent>;
 
