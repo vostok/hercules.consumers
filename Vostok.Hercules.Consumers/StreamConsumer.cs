@@ -82,6 +82,7 @@ namespace Vostok.Hercules.Consumers
                         continue;
                     }
 
+                    eventsQuery.Coordinates = StreamCoordinatesMerger.FixInitialCoordinates(coordinates, readResult.Payload.Next);
                     await settings.EventsHandler.HandleAsync(eventsQuery, events, cancellationToken).ConfigureAwait(false);
 
                     var newCoordinates = coordinates = StreamCoordinatesMerger.Merge(coordinates, readResult.Payload.Next);
