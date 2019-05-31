@@ -48,7 +48,7 @@ namespace Vostok.Hercules.Consumers
                             coordinates ?? StreamCoordinates.Empty,
                             await settings.CoordinatesStorage.GetCurrentAsync().ConfigureAwait(false));
 
-                        log.Info("Updated coordinates from storage: {StreamCoordinates}", coordinates);
+                        log.Info("Updated coordinates from storage: {StreamCoordinates}.", coordinates);
 
                         shardingSettings = newShardingSettings;
                     }
@@ -58,7 +58,7 @@ namespace Vostok.Hercules.Consumers
                         shardingSettings.ClientShardIndex,
                         shardingSettings.ClientShardCount);
 
-                    log.Debug("Current coordinates: {StreamCoordinates}", coordinates);
+                    log.Debug("Current coordinates: {StreamCoordinates}.", coordinates);
 
                     var eventsQuery = new ReadStreamQuery(settings.StreamName)
                     {
