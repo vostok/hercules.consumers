@@ -76,7 +76,7 @@ namespace Vostok.Hercules.Consumers
                         events.Count,
                         settings.StreamName);
 
-                    if (settings.HandleWithoutEvents)
+                    if (events.Count != 0 || settings.HandleWithoutEvents)
                     {
                         eventsQuery.Coordinates = StreamCoordinatesMerger.FixInitialCoordinates(coordinates, readResult.Payload.Next);
                         await settings.EventsHandler.HandleAsync(eventsQuery, events, cancellationToken).ConfigureAwait(false);
