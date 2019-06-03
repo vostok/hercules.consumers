@@ -76,16 +76,19 @@ namespace Vostok.Hercules.Consumers
                         events.Count,
                         settings.StreamName);
 
+                    if (settings.HandleWithoutEvents)
+                    {
+                        eventsQuery.Coordinates = StreamCoordinatesMerger.FixInitialCoordinates(coordinates, readResult.Payload.Next);
+                        await settings.EventsHandler.HandleAsync(eventsQuery, events, cancellationToken).ConfigureAwait(false);
+                    }
+
+                    var newCoordinates = coordinates = StreamCoordinatesMerger.Merge(coordinates, readResult.Payload.Next);
+
                     if (events.Count == 0)
                     {
                         await Task.Delay(settings.DelayOnNoEvents, cancellationToken).ConfigureAwait(false);
                         continue;
                     }
-
-                    eventsQuery.Coordinates = StreamCoordinatesMerger.FixInitialCoordinates(coordinates, readResult.Payload.Next);
-                    await settings.EventsHandler.HandleAsync(eventsQuery, events, cancellationToken).ConfigureAwait(false);
-
-                    var newCoordinates = coordinates = StreamCoordinatesMerger.Merge(coordinates, readResult.Payload.Next);
 
                     if (settings.AutoSaveCoordinates)
                         Task.Run(() => settings.CoordinatesStorage.AdvanceAsync(newCoordinates));

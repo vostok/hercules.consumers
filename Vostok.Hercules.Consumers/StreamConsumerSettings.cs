@@ -38,6 +38,8 @@ namespace Vostok.Hercules.Consumers
 
         public bool AutoSaveCoordinates { get; set; } = true;
 
+        public bool HandleWithoutEvents { get; set; } = false;
+
         public int EventsBatchSize { get; set; } = 10000;
 
         public TimeSpan EventsReadTimeout { get; set; } = TimeSpan.FromSeconds(45);
