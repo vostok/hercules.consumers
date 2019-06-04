@@ -79,7 +79,7 @@ namespace Vostok.Hercules.Consumers
                     if (events.Count != 0 || settings.HandleWithoutEvents)
                     {
                         eventsQuery.Coordinates = StreamCoordinatesMerger.FixInitialCoordinates(coordinates, readResult.Payload.Next);
-                        await settings.EventsHandler.HandleAsync(eventsQuery, events, cancellationToken).ConfigureAwait(false);
+                        await settings.EventsHandler.HandleAsync(eventsQuery, readResult, cancellationToken).ConfigureAwait(false);
                     }
 
                     var newCoordinates = coordinates = StreamCoordinatesMerger.Merge(coordinates, readResult.Payload.Next);

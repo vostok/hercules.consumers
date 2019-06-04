@@ -5,8 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Vostok.Hercules.Client.Abstractions.Events;
-using Vostok.Hercules.Client.Abstractions.Models;
 using Vostok.Hercules.Client.Abstractions.Queries;
+using Vostok.Hercules.Client.Abstractions.Results;
 using Vostok.Logging.Abstractions;
 
 namespace Vostok.Hercules.Consumers
@@ -56,9 +56,9 @@ namespace Vostok.Hercules.Consumers
                 buffer = new List<HerculesEvent>();
             }
 
-            public async Task HandleAsync(ReadStreamQuery query, IList<HerculesEvent> events, CancellationToken cancellationToken)
+            public async Task HandleAsync(ReadStreamQuery query, ReadStreamResult streamResult, CancellationToken cancellationToken)
             {
-                var resultingEvents = events as IEnumerable<HerculesEvent>;
+                var resultingEvents = streamResult.Payload.Events as IEnumerable<HerculesEvent>;
 
                 if (settings.Filter != null)
                     resultingEvents = resultingEvents.Where(settings.Filter);
