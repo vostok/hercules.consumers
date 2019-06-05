@@ -125,8 +125,8 @@ namespace Vostok.Hercules.Consumers.Tests.Helpers
                     new StreamPosition {Partition = 2, Offset = 2}
                 });
 
-            StreamCoordinatesMerger.Distance(a, b).Should().Be(100);
-            StreamCoordinatesMerger.Distance(b, a).Should().Be(-100);
+            StreamCoordinatesMerger.Distance(a, b).Should().Be(102);
+            StreamCoordinatesMerger.Distance(b, a).Should().Be(-99);
         }
     }
 }

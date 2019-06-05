@@ -94,6 +94,10 @@ namespace Vostok.Hercules.Consumers.Helpers
                 {
                     result += position.Offset - p.Offset;
                 }
+                else
+                {
+                    result += position.Offset;
+                }
             }
 
             return result;
