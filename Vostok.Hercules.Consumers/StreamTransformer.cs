@@ -91,7 +91,7 @@ namespace Vostok.Hercules.Consumers
                 {
                     return settings.Transformer?.Invoke(@event) ?? Array.Empty<HerculesEvent>();
                 }
-                catch(Exception error)
+                catch (Exception error)
                 {
                     log.Warn(error);
                     return Array.Empty<HerculesEvent>();

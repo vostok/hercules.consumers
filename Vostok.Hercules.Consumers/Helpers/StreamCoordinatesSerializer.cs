@@ -26,9 +26,9 @@ namespace Vostok.Hercules.Consumers.Helpers
         }
 
         [NotNull]
-        public static StreamCoordinates Deserialize(byte[] serialized)
+        public static StreamCoordinates Deserialize([CanBeNull] byte[] serialized)
         {
-            var reader = new StringReader(Encoding.UTF8.GetString(serialized));
+            var reader = new StringReader(Encoding.UTF8.GetString(serialized ?? new byte[0]));
 
             var positions = new List<StreamPosition>();
 

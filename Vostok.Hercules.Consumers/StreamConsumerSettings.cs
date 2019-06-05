@@ -38,7 +38,7 @@ namespace Vostok.Hercules.Consumers
 
         public bool AutoSaveCoordinates { get; set; } = true;
 
-        public bool HandleWithoutEvents { get; set; } = false;
+        public bool HandleWithoutEvents { get; set; }
 
         public int EventsBatchSize { get; set; } = 10000;
 

@@ -44,7 +44,7 @@ namespace Vostok.Hercules.Consumers
                             newShardingSettings.ClientShardIndex,
                             newShardingSettings.ClientShardCount);
 
-                        coordinates = StreamCoordinatesMerger.Merge(
+                        coordinates = StreamCoordinatesMerger.MergeMax(
                             coordinates ?? StreamCoordinates.Empty,
                             await settings.CoordinatesStorage.GetCurrentAsync().ConfigureAwait(false));
 
@@ -82,7 +82,7 @@ namespace Vostok.Hercules.Consumers
                         await settings.EventsHandler.HandleAsync(eventsQuery, readResult, cancellationToken).ConfigureAwait(false);
                     }
 
-                    var newCoordinates = coordinates = StreamCoordinatesMerger.Merge(coordinates, readResult.Payload.Next);
+                    var newCoordinates = coordinates = StreamCoordinatesMerger.MergeMax(coordinates, readResult.Payload.Next);
 
                     if (events.Count == 0)
                     {

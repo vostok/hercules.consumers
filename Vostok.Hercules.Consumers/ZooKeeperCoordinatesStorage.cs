@@ -46,7 +46,7 @@ namespace Vostok.Hercules.Consumers
                             if (!to.AdvancesOver(currentCoordinates))
                                 return;
 
-                            var mergedCoordinates = StreamCoordinatesMerger.Merge(currentCoordinates, to);
+                            var mergedCoordinates = StreamCoordinatesMerger.MergeMax(currentCoordinates, to);
                             var mergedData = StreamCoordinatesSerializer.Serialize(mergedCoordinates);
 
                             var setDataRequest = new SetDataRequest(settings.NodePath, mergedData)
