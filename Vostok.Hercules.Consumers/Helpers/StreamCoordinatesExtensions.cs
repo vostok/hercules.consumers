@@ -3,7 +3,8 @@ using Vostok.Hercules.Client.Abstractions.Models;
 
 namespace Vostok.Hercules.Consumers.Helpers
 {
-    internal static class StreamCoordinatesExtensions
+    [PublicAPI]
+    public static class StreamCoordinatesExtensions
     {
         public static bool AdvancesOver([NotNull] this StreamCoordinates self, [NotNull] StreamCoordinates other)
         {

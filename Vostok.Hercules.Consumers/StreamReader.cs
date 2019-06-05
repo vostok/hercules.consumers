@@ -22,9 +22,16 @@ namespace Vostok.Hercules.Consumers
             this.log = (log ?? LogProvider.Get()).ForContext<StreamConsumer>();
         }
 
+        public Task<(ReadStreamQuery query, ReadStreamResult result)> ReadAsync(
+            StreamCoordinates coordinates,
+            StreamShardingSettings shardingSettings,
+            CancellationToken cancellationToken) =>
+            ReadAsync(coordinates, shardingSettings, settings.EventsBatchSize, cancellationToken);
+
         public async Task<(ReadStreamQuery query, ReadStreamResult result)> ReadAsync(
-            StreamCoordinates coordinates, 
-            StreamShardingSettings shardingSettings, 
+            StreamCoordinates coordinates,
+            StreamShardingSettings shardingSettings,
+            int limit,
             CancellationToken cancellationToken)
         {
             log.Info(
@@ -52,6 +59,29 @@ namespace Vostok.Hercules.Consumers
             eventsQuery.Coordinates = StreamCoordinatesMerger.FixInitialCoordinates(coordinates, readResult.Payload.Next);
 
             return (eventsQuery, readResult);
+        }
+
+        public async Task<long> CountStreamRemainingEvents(
+            StreamCoordinates coordinates,
+            StreamShardingSettings shardingSettings)
+        {
+            try
+            {
+                var seekToEndQuery = new SeekToEndStreamQuery(settings.StreamName)
+                {
+                    ClientShard = shardingSettings.ClientShardIndex,
+                    ClientShardCount = shardingSettings.ClientShardCount
+                };
+
+                var end = await settings.StreamClient.SeekToEndAsync(seekToEndQuery, settings.EventsReadTimeout).ConfigureAwait(false);
+
+                return StreamCoordinatesMerger.Distance(coordinates, end.Payload.Next);
+            }
+            catch (Exception e)
+            {
+                log.Error(e, "Failed to count remaining events.");
+                return 0;
+            }
         }
     }
 }

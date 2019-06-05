@@ -25,13 +25,15 @@ namespace Vostok.Hercules.Consumers
             this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
             this.log = (log ?? LogProvider.Get()).ForContext<StreamConsumer>();
 
-            streamReader = new StreamReader(new StreamReaderSettings(
-                settings.StreamName,
-                settings.StreamClient)
-            {
-                EventsReadTimeout = settings.EventsReadTimeout,
-                EventsBatchSize = settings.EventsBatchSize
-            }, log);
+            streamReader = new StreamReader(
+                new StreamReaderSettings(
+                    settings.StreamName,
+                    settings.StreamClient)
+                {
+                    EventsReadTimeout = settings.EventsReadTimeout,
+                    EventsBatchSize = settings.EventsBatchSize
+                },
+                log);
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)
