@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Vostok.Commons.Helpers.Extensions;
 using Vostok.Hercules.Client.Abstractions.Models;
-using Vostok.Hercules.Client.Abstractions.Queries;
 using Vostok.Hercules.Consumers.Helpers;
 using Vostok.Logging.Abstractions;
 
@@ -19,11 +18,20 @@ namespace Vostok.Hercules.Consumers
     {
         private readonly StreamConsumerSettings settings;
         private readonly ILog log;
+        private readonly StreamReader streamReader;
 
         public StreamConsumer([NotNull] StreamConsumerSettings settings, [CanBeNull] ILog log)
         {
             this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
             this.log = (log ?? LogProvider.Get()).ForContext<StreamConsumer>();
+
+            streamReader = new StreamReader(new StreamReaderSettings(
+                settings.StreamName,
+                settings.StreamClient)
+            {
+                EventsReadTimeout = settings.EventsReadTimeout,
+                EventsBatchSize = settings.EventsBatchSize
+            }, log);
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)
@@ -53,36 +61,15 @@ namespace Vostok.Hercules.Consumers
                         shardingSettings = newShardingSettings;
                     }
 
-                    log.Info(
-                        "Reading logical shard with index {ClientShard} from {ClientShardCount}.",
-                        shardingSettings.ClientShardIndex,
-                        shardingSettings.ClientShardCount);
-
-                    log.Debug("Current coordinates: {StreamCoordinates}.", coordinates);
-
-                    var eventsQuery = new ReadStreamQuery(settings.StreamName)
-                    {
-                        Coordinates = coordinates,
-                        ClientShard = shardingSettings.ClientShardIndex,
-                        ClientShardCount = shardingSettings.ClientShardCount,
-                        Limit = settings.EventsBatchSize
-                    };
-
-                    var readResult = await settings.StreamClient.ReadAsync(eventsQuery, settings.EventsReadTimeout, cancellationToken).ConfigureAwait(false);
-
-                    var events = readResult.Payload.Events;
-                    log.Info(
-                        "Read {EventsCount} event(s) from Hercules stream '{StreamName}'.",
-                        events.Count,
-                        settings.StreamName);
+                    var (query, result) = await streamReader.ReadAsync(coordinates, shardingSettings, cancellationToken).ConfigureAwait(false);
+                    var events = result.Payload.Events;
 
                     if (events.Count != 0 || settings.HandleWithoutEvents)
                     {
-                        eventsQuery.Coordinates = StreamCoordinatesMerger.FixInitialCoordinates(coordinates, readResult.Payload.Next);
-                        await settings.EventsHandler.HandleAsync(eventsQuery, readResult, cancellationToken).ConfigureAwait(false);
+                        await settings.EventsHandler.HandleAsync(query, result, cancellationToken).ConfigureAwait(false);
                     }
 
-                    var newCoordinates = coordinates = StreamCoordinatesMerger.MergeMax(coordinates, readResult.Payload.Next);
+                    var newCoordinates = coordinates = StreamCoordinatesMerger.MergeMax(coordinates, result.Payload.Next);
 
                     if (events.Count == 0)
                     {
@@ -90,8 +77,7 @@ namespace Vostok.Hercules.Consumers
                         continue;
                     }
 
-                    if (settings.AutoSaveCoordinates)
-                        Task.Run(() => settings.CoordinatesStorage.AdvanceAsync(newCoordinates));
+                    Task.Run(() => settings.CoordinatesStorage.AdvanceAsync(newCoordinates));
                 }
                 catch (Exception error)
                 {

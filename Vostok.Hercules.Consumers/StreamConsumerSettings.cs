@@ -36,8 +36,6 @@ namespace Vostok.Hercules.Consumers
         [NotNull]
         public Func<StreamShardingSettings> ShardingSettingsProvider { get; }
 
-        public bool AutoSaveCoordinates { get; set; } = true;
-
         public bool HandleWithoutEvents { get; set; }
 
         public int EventsBatchSize { get; set; } = 10000;
