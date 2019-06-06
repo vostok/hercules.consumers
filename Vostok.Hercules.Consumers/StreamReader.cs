@@ -19,7 +19,7 @@ namespace Vostok.Hercules.Consumers
         public StreamReader([NotNull] StreamReaderSettings settings, [CanBeNull] ILog log)
         {
             this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            this.log = (log ?? LogProvider.Get()).ForContext<StreamConsumer>();
+            this.log = (log ?? LogProvider.Get()).ForContext<StreamReader>();
         }
 
         public Task<(ReadStreamQuery query, ReadStreamResult result)> ReadAsync(
