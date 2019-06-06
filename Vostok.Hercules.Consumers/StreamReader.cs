@@ -31,7 +31,7 @@ namespace Vostok.Hercules.Consumers
         public async Task<(ReadStreamQuery query, ReadStreamResult result)> ReadAsync(
             StreamCoordinates coordinates,
             StreamShardingSettings shardingSettings,
-            int additionalLimit,
+            long additionalLimit,
             CancellationToken cancellationToken)
         {
             log.Info(
@@ -46,7 +46,7 @@ namespace Vostok.Hercules.Consumers
                 Coordinates = coordinates,
                 ClientShard = shardingSettings.ClientShardIndex,
                 ClientShardCount = shardingSettings.ClientShardCount,
-                Limit = Math.Min(settings.EventsBatchSize, additionalLimit)
+                Limit = (int)Math.Min(settings.EventsBatchSize, additionalLimit)
             };
 
             var readResult = await settings.StreamClient.ReadAsync(eventsQuery, settings.EventsReadTimeout, cancellationToken).ConfigureAwait(false);
