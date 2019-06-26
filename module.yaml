@@ -9,6 +9,7 @@ notests *default:
     - Vostok.Hercules.Consumers/bin/Release/netstandard2.0/Vostok.Hercules.Consumers.dll
 
   deps:
+    - vostok.metrics
     - vostok.devtools
     - vostok.logging.abstractions
     - vostok.hercules.client.abstractions

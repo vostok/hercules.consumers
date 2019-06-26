@@ -1,6 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 using Vostok.Hercules.Client.Abstractions;
+using Vostok.Metrics;
 
 namespace Vostok.Hercules.Consumers
 {
@@ -35,6 +36,9 @@ namespace Vostok.Hercules.Consumers
 
         [NotNull]
         public Func<StreamShardingSettings> ShardingSettingsProvider { get; }
+        
+        [CanBeNull]
+        public IMetricContext MetricContext { get; set; }
 
         public bool HandleWithoutEvents { get; set; }
 

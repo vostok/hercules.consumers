@@ -49,5 +49,10 @@ namespace Vostok.Hercules.Consumers
             var (query, result) = await reader.ReadAsync(coordinates, shardingSettings, additionalLimit, cancellationToken).ConfigureAwait(false);
             return (query, result.FromGenericResult());
         }
+
+        public Task<long> CountStreamRemainingEvents(
+            StreamCoordinates coordinates,
+            StreamShardingSettings shardingSettings) =>
+            reader.CountStreamRemainingEvents(coordinates, shardingSettings);
     }
 }

@@ -8,6 +8,8 @@ using Vostok.Hercules.Client.Abstractions.Events;
 using Vostok.Hercules.Client.Abstractions.Queries;
 using Vostok.Hercules.Client.Abstractions.Results;
 using Vostok.Logging.Abstractions;
+using Vostok.Metrics.Grouping;
+using Vostok.Metrics.Primitives.Gauge;
 
 namespace Vostok.Hercules.Consumers
 {
@@ -32,6 +34,7 @@ namespace Vostok.Hercules.Consumers
                 settings.CoordinatesStorage,
                 settings.ShardingSettingsProvider)
             {
+                MetricContext = settings.MetricContext,
                 EventsBatchSize = settings.EventsBatchSize,
                 EventsReadTimeout = settings.EventsReadTimeout,
                 DelayOnError = settings.DelayOnError,
@@ -47,6 +50,7 @@ namespace Vostok.Hercules.Consumers
             private readonly ILog log;
 
             private readonly List<HerculesEvent> buffer;
+            private IMetricGroup1<IIntegerGauge> eventsMetric;
 
             public TransformingEventHandler(StreamTransformerSettings settings, ILog log)
             {
@@ -54,6 +58,8 @@ namespace Vostok.Hercules.Consumers
                 this.log = log;
 
                 buffer = new List<HerculesEvent>();
+
+                eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig { ResetOnScrape = true });
             }
 
             public async Task HandleAsync(ReadStreamQuery query, ReadStreamResult streamResult, CancellationToken cancellationToken)
@@ -68,6 +74,8 @@ namespace Vostok.Hercules.Consumers
 
                 buffer.Clear();
                 buffer.AddRange(resultingEvents);
+
+                eventsMetric?.For("out").Add(buffer.Count);
 
                 if (buffer.Count == 0)
                     return;
@@ -94,6 +102,7 @@ namespace Vostok.Hercules.Consumers
                 catch (Exception error)
                 {
                     log.Warn(error);
+                    eventsMetric?.For("error").Increment();
                     return Array.Empty<HerculesEvent>();
                 }
             }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Vostok.Hercules.Client.Abstractions;
 using Vostok.Hercules.Client.Abstractions.Events;
+using Vostok.Metrics;
 
 namespace Vostok.Hercules.Consumers
 {
@@ -49,6 +50,9 @@ namespace Vostok.Hercules.Consumers
         [CanBeNull]
         public Func<HerculesEvent, IEnumerable<HerculesEvent>> Transformer { get; set; }
 
+        [CanBeNull]
+        public IMetricContext MetricContext { get; set; }
+        
         public int EventsBatchSize { get; set; } = 10000;
 
         public TimeSpan EventsReadTimeout { get; set; } = TimeSpan.FromSeconds(45);

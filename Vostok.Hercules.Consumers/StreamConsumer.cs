@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Vostok.Commons.Helpers.Extensions;
+using Vostok.Hercules.Client.Abstractions.Events;
 using Vostok.Hercules.Client.Abstractions.Models;
 using Vostok.Hercules.Consumers.Helpers;
 using Vostok.Logging.Abstractions;
+using Vostok.Metrics.Grouping;
+using Vostok.Metrics.Primitives.Gauge;
 
 // ReSharper disable MethodSupportsCancellation
 
@@ -19,6 +23,9 @@ namespace Vostok.Hercules.Consumers
         private readonly StreamConsumerSettings settings;
         private readonly ILog log;
         private readonly StreamReader streamReader;
+        private IMetricGroup1<IIntegerGauge> eventsMetric;
+        private StreamCoordinates coordinates;
+        private StreamShardingSettings shardingSettings;
 
         public StreamConsumer([NotNull] StreamConsumerSettings settings, [CanBeNull] ILog log)
         {
@@ -34,13 +41,12 @@ namespace Vostok.Hercules.Consumers
                     EventsBatchSize = settings.EventsBatchSize
                 },
                 log);
+
+            eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)
         {
-            var coordinates = null as StreamCoordinates;
-            var shardingSettings = null as StreamShardingSettings;
-
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
@@ -65,6 +71,8 @@ namespace Vostok.Hercules.Consumers
 
                     var (query, result) = await streamReader.ReadAsync(coordinates, shardingSettings, cancellationToken).ConfigureAwait(false);
                     var events = result.Payload.Events;
+                    
+                    await LogProgress(events).ConfigureAwait(false);
 
                     if (events.Count != 0 || settings.HandleWithoutEvents)
                     {
@@ -91,6 +99,19 @@ namespace Vostok.Hercules.Consumers
                     await Task.Delay(settings.DelayOnError, cancellationToken).SilentlyContinue().ConfigureAwait(false);
                 }
             }
+        }
+
+        private async Task LogProgress(IList<HerculesEvent> events)
+        {
+            var remaining = await streamReader.CountStreamRemainingEvents(coordinates, shardingSettings).ConfigureAwait(false);
+            
+            log.Info(
+                "Consumer progress: events in: {EventsIn}, events remaining: {EventsRemaining}.",
+                events.Count,
+                remaining);
+            
+            eventsMetric?.For("in").Add(events.Count);
+            eventsMetric?.For("remaining").Set(remaining);
         }
     }
 }
