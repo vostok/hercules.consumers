@@ -47,7 +47,7 @@ namespace Vostok.Hercules.Consumers.Helpers
                     new StreamPosition
                     {
                         Partition = int.Parse(line.Substring(0, separatorIndex).Trim()),
-                        Offset = int.Parse(line.Substring(separatorIndex + 1).Trim())
+                        Offset = long.Parse(line.Substring(separatorIndex + 1).Trim())
                     });
             }
 
