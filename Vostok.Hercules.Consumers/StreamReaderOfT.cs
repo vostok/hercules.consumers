@@ -74,8 +74,16 @@ namespace Vostok.Hercules.Consumers
                 };
 
                 var end = await settings.StreamClient.SeekToEndAsync(seekToEndQuery, settings.EventsReadTimeout).ConfigureAwait(false);
+                var endCoordinates = end.Payload.Next;
 
-                return StreamCoordinatesMerger.Distance(coordinates, end.Payload.Next);
+                var distance = StreamCoordinatesMerger.Distance(coordinates, endCoordinates);
+
+                log.Debug("Stream remaining events {Count}. Current coordinates: {CurrentCoordinates}, end coordinates: {EndCoordinates}.", 
+                    distance,
+                    coordinates,
+                    endCoordinates);
+
+                return distance;
             }
             catch (Exception e)
             {
