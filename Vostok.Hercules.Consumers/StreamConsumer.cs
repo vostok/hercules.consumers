@@ -43,6 +43,7 @@ namespace Vostok.Hercules.Consumers
                 log);
 
             eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
+            settings.MetricContext?.CreateFuncGauge("events", "type").For("remaining").SetValueProvider(CountStreamRemainingEvents);
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)
@@ -72,7 +73,7 @@ namespace Vostok.Hercules.Consumers
                     var (query, result) = await streamReader.ReadAsync(coordinates, shardingSettings, cancellationToken).ConfigureAwait(false);
                     var events = result.Payload.Events;
                     
-                    await LogProgress(events).ConfigureAwait(false);
+                    LogProgress(events);
 
                     if (events.Count != 0 || settings.HandleWithoutEvents)
                     {
@@ -101,17 +102,20 @@ namespace Vostok.Hercules.Consumers
             }
         }
 
-        private async Task LogProgress(IList<HerculesEvent> events)
+        private void LogProgress(IList<HerculesEvent> events)
         {
-            var remaining = await streamReader.CountStreamRemainingEvents(coordinates, shardingSettings).ConfigureAwait(false);
-            
-            log.Info(
-                "Consumer progress: events in: {EventsIn}, events remaining: {EventsRemaining}.",
-                events.Count,
-                remaining);
+            log.Info("Consumer progress: events in: {EventsIn}.", events.Count);
             
             eventsMetric?.For("in").Add(events.Count);
-            eventsMetric?.For("remaining").Set(remaining);
+        }
+        
+        private double CountStreamRemainingEvents()
+        {
+            var remaining = streamReader.CountStreamRemainingEvents(coordinates, shardingSettings).GetAwaiter().GetResult();
+            
+            log.Info("Consumer progress: events remaining: {EventsRemaining}.", remaining);
+
+            return remaining;
         }
     }
 }
