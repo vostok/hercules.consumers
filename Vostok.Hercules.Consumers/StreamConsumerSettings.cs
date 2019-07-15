@@ -36,7 +36,7 @@ namespace Vostok.Hercules.Consumers
 
         [NotNull]
         public Func<StreamShardingSettings> ShardingSettingsProvider { get; }
-        
+
         [CanBeNull]
         public IMetricContext MetricContext { get; set; }
 

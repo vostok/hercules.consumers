@@ -59,7 +59,7 @@ namespace Vostok.Hercules.Consumers
 
                 buffer = new List<HerculesEvent>();
 
-                eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig { ResetOnScrape = true });
+                eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
             }
 
             public async Task HandleAsync(ReadStreamQuery query, ReadStreamResult streamResult, CancellationToken cancellationToken)

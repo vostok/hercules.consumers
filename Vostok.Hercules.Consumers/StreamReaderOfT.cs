@@ -78,7 +78,8 @@ namespace Vostok.Hercules.Consumers
 
                 var distance = StreamCoordinatesMerger.Distance(coordinates, endCoordinates);
 
-                log.Debug("Stream remaining events: {Count}. Current coordinates: {CurrentCoordinates}, end coordinates: {EndCoordinates}.", 
+                log.Debug(
+                    "Stream remaining events: {Count}. Current coordinates: {CurrentCoordinates}, end coordinates: {EndCoordinates}.",
                     distance,
                     coordinates,
                     endCoordinates);

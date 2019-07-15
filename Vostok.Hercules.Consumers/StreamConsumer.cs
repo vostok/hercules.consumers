@@ -72,7 +72,7 @@ namespace Vostok.Hercules.Consumers
 
                     var (query, result) = await streamReader.ReadAsync(coordinates, shardingSettings, cancellationToken).ConfigureAwait(false);
                     var events = result.Payload.Events;
-                    
+
                     LogProgress(events);
 
                     if (events.Count != 0 || settings.HandleWithoutEvents)
@@ -105,16 +105,13 @@ namespace Vostok.Hercules.Consumers
         private void LogProgress(IList<HerculesEvent> events)
         {
             log.Info("Consumer progress: events in: {EventsIn}.", events.Count);
-            
             eventsMetric?.For("in").Add(events.Count);
         }
-        
+
         private double CountStreamRemainingEvents()
         {
             var remaining = streamReader.CountStreamRemainingEvents(coordinates, shardingSettings).GetAwaiter().GetResult();
-            
             log.Info("Consumer progress: events remaining: {EventsRemaining}.", remaining);
-
             return remaining;
         }
     }

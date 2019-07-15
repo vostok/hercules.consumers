@@ -52,7 +52,7 @@ namespace Vostok.Hercules.Consumers
 
         [CanBeNull]
         public IMetricContext MetricContext { get; set; }
-        
+
         public int EventsBatchSize { get; set; } = 10000;
 
         public TimeSpan EventsReadTimeout { get; set; } = TimeSpan.FromSeconds(45);
