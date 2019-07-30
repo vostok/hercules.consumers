@@ -75,15 +75,14 @@ namespace Vostok.Hercules.Consumers
                 buffer.Clear();
                 buffer.AddRange(resultingEvents);
 
-                eventsMetric?.For("out").Add(buffer.Count);
-
                 if (buffer.Count == 0)
                     return;
 
                 await SendEvents(buffer, cancellationToken).ConfigureAwait(false);
 
                 log.Info("Inserted {EventsCount} event(s) into target stream '{TargetStream}'.", buffer.Count, settings.TargetStreamName);
-
+                eventsMetric?.For("out").Add(buffer.Count);
+                
                 buffer.Clear();
             }
 
