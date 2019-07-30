@@ -35,7 +35,7 @@ namespace Vostok.Hercules.Consumers
                 settings.ShardingSettingsProvider)
             {
                 MetricContext = settings.MetricContext,
-                EventsBatchSize = settings.EventsBatchSize,
+                EventsBatchSize = settings.EventsReadBatchSize,
                 EventsReadTimeout = settings.EventsReadTimeout,
                 DelayOnError = settings.DelayOnError,
                 DelayOnNoEvents = settings.DelayOnNoEvents
@@ -80,17 +80,40 @@ namespace Vostok.Hercules.Consumers
                 if (buffer.Count == 0)
                     return;
 
-                var insertQuery = new InsertEventsQuery(settings.TargetStreamName, buffer);
-
-                var insertResult = await settings.GateClient
-                    .InsertAsync(insertQuery, settings.EventsWriteTimeout, cancellationToken)
-                    .ConfigureAwait(false);
-
-                insertResult.EnsureSuccess();
+                await SendEvents(buffer, cancellationToken).ConfigureAwait(false);
 
                 log.Info("Inserted {EventsCount} event(s) into target stream '{TargetStream}'.", buffer.Count, settings.TargetStreamName);
 
                 buffer.Clear();
+            }
+
+            private async Task SendEvents(IList<HerculesEvent> events, CancellationToken cancellationToken)
+            {
+                var pointer = 0;
+                while (pointer < events.Count)
+                {
+                    try
+                    {
+                        var insertQuery = new InsertEventsQuery(
+                            settings.TargetStreamName,
+                            events.Skip(pointer).Take(settings.EventsWriteBatchSize).ToList());
+
+                        var insertResult = await settings.GateClient
+                            .InsertAsync(insertQuery, settings.EventsWriteTimeout, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        insertResult.EnsureSuccess();
+
+                        pointer += settings.EventsWriteBatchSize;
+
+                        break;
+                    }
+                    catch (Exception e)
+                    {
+                        log.Error(e, "Failed to send aggregated events.");
+                        await Task.Delay(settings.DelayOnError, cancellationToken).ConfigureAwait(false);
+                    }
+                }
             }
 
             private IEnumerable<HerculesEvent> Transform(HerculesEvent @event)
