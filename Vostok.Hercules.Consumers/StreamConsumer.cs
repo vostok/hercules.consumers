@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Vostok.Commons.Helpers.Extensions;
 using Vostok.Hercules.Client.Abstractions.Models;
+using Vostok.Hercules.Client.Abstractions.Queries;
+using Vostok.Hercules.Client.Abstractions.Results;
 using Vostok.Hercules.Consumers.Helpers;
 using Vostok.Logging.Abstractions;
 using Vostok.Metrics.Grouping;
@@ -103,14 +105,22 @@ namespace Vostok.Hercules.Consumers
 
         private async Task MakeIteration(CancellationToken cancellationToken)
         {
-            var (query, result) = await streamReader.ReadAsync(coordinates, shardingSettings, cancellationToken).ConfigureAwait(false);
-            var events = result.Payload.Events;
+            ReadStreamQuery query;
+            ReadStreamResult result;
+            using (iterationMetric?.For("read_time").Measure())
+            {
+                (query, result) = await streamReader.ReadAsync(coordinates, shardingSettings, cancellationToken).ConfigureAwait(false);
+            }
 
+            var events = result.Payload.Events;
             LogProgress(events.Count);
 
             if (events.Count != 0 || settings.HandleWithoutEvents)
             {
-                await settings.EventsHandler.HandleAsync(query, result, cancellationToken).ConfigureAwait(false);
+                using (iterationMetric?.For("handle_time").Measure())
+                {
+                    await settings.EventsHandler.HandleAsync(query, result, cancellationToken).ConfigureAwait(false);
+                }
             }
 
             var newCoordinates = coordinates = StreamCoordinatesMerger.MergeMax(coordinates, result.Payload.Next);

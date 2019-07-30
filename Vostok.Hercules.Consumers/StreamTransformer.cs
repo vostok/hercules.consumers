@@ -10,6 +10,7 @@ using Vostok.Hercules.Client.Abstractions.Results;
 using Vostok.Logging.Abstractions;
 using Vostok.Metrics.Grouping;
 using Vostok.Metrics.Primitives.Gauge;
+using Vostok.Metrics.Primitives.Timer;
 
 namespace Vostok.Hercules.Consumers
 {
@@ -51,7 +52,8 @@ namespace Vostok.Hercules.Consumers
 
             private readonly List<HerculesEvent> buffer;
             private IMetricGroup1<IIntegerGauge> eventsMetric;
-
+            private readonly IMetricGroup1<ITimer> iterationMetric;
+            
             public TransformingEventHandler(StreamTransformerSettings settings, ILog log)
             {
                 this.settings = settings;
@@ -60,25 +62,32 @@ namespace Vostok.Hercules.Consumers
                 buffer = new List<HerculesEvent>();
 
                 eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
+                iterationMetric = settings.MetricContext?.CreateSummary("iteration", "type", new SummaryConfig { Quantiles = new[] { 0.5, 0.75, 1 } });
             }
 
             public async Task HandleAsync(ReadStreamQuery query, ReadStreamResult streamResult, CancellationToken cancellationToken)
             {
-                var resultingEvents = streamResult.Payload.Events as IEnumerable<HerculesEvent>;
+                using (iterationMetric?.For("transform_time").Measure())
+                {
+                    var resultingEvents = streamResult.Payload.Events as IEnumerable<HerculesEvent>;
 
-                if (settings.Filter != null)
-                    resultingEvents = resultingEvents.Where(settings.Filter);
+                    if (settings.Filter != null)
+                        resultingEvents = resultingEvents.Where(settings.Filter);
 
-                if (settings.Transformer != null)
-                    resultingEvents = resultingEvents.SelectMany(Transform);
+                    if (settings.Transformer != null)
+                        resultingEvents = resultingEvents.SelectMany(Transform);
 
-                buffer.Clear();
-                buffer.AddRange(resultingEvents);
+                    buffer.Clear();
+                    buffer.AddRange(resultingEvents);
+                }
 
                 if (buffer.Count == 0)
                     return;
 
-                await SendEvents(buffer, cancellationToken).ConfigureAwait(false);
+                using (iterationMetric?.For("write_time").Measure())
+                {
+                    await WriteEvents(buffer, cancellationToken).ConfigureAwait(false);
+                }
 
                 log.Info("Inserted {EventsCount} event(s) into target stream '{TargetStream}'.", buffer.Count, settings.TargetStreamName);
                 eventsMetric?.For("out").Add(buffer.Count);
@@ -86,7 +95,7 @@ namespace Vostok.Hercules.Consumers
                 buffer.Clear();
             }
 
-            private async Task SendEvents(IList<HerculesEvent> events, CancellationToken cancellationToken)
+            private async Task WriteEvents(IList<HerculesEvent> events, CancellationToken cancellationToken)
             {
                 var pointer = 0;
                 while (pointer < events.Count)
