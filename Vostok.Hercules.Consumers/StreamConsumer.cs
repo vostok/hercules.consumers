@@ -28,6 +28,8 @@ namespace Vostok.Hercules.Consumers
         private StreamCoordinates coordinates;
         private StreamShardingSettings shardingSettings;
 
+        private volatile bool restart;
+        
         public StreamConsumer([NotNull] StreamConsumerSettings settings, [CanBeNull] ILog log)
         {
             this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
@@ -63,13 +65,15 @@ namespace Vostok.Hercules.Consumers
                             newShardingSettings.ClientShardIndex,
                             newShardingSettings.ClientShardCount);
 
-                        coordinates = StreamCoordinatesMerger.MergeMax(
-                            coordinates ?? StreamCoordinates.Empty,
-                            await settings.CoordinatesStorage.GetCurrentAsync().ConfigureAwait(false));
-
-                        log.Info("Updated coordinates from storage: {StreamCoordinates}.", coordinates);
-
                         shardingSettings = newShardingSettings;
+
+                        restart = true;
+                    }
+
+                    if (restart)
+                    {
+                        await Restart(cancellationToken).ConfigureAwait(false);
+                        restart = false;
                     }
 
                     using (iterationMetric?.For("time").Measure())
@@ -87,6 +91,14 @@ namespace Vostok.Hercules.Consumers
                     await Task.Delay(settings.DelayOnError, cancellationToken).SilentlyContinue().ConfigureAwait(false);
                 }
             }
+        }
+
+        private async Task Restart(CancellationToken cancellationToken)
+        {
+            coordinates = await settings.CoordinatesStorage.GetCurrentAsync().ConfigureAwait(false);
+            if (coordinates.Equals(StreamCoordinates.Empty))
+                coordinates = await streamReader.SeekToEndAsync(shardingSettings, cancellationToken).ConfigureAwait(false);
+            log.Info("Updated coordinates from storage: {StreamCoordinates}.", coordinates);
         }
 
         private async Task MakeIteration(CancellationToken cancellationToken)
@@ -120,7 +132,7 @@ namespace Vostok.Hercules.Consumers
 
         private double CountStreamRemainingEvents()
         {
-            var remaining = streamReader.CountStreamRemainingEvents(coordinates, shardingSettings).GetAwaiter().GetResult();
+            var remaining = streamReader.CountStreamRemainingEventsAsync(coordinates, shardingSettings).GetAwaiter().GetResult();
             log.Info("Consumer progress: events remaining: {EventsRemaining}.", remaining);
             return remaining;
         }

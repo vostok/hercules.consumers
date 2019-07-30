@@ -37,7 +37,7 @@ namespace Vostok.Hercules.Consumers
         public Task<(ReadStreamQuery query, ReadStreamResult result)> ReadAsync(
             StreamCoordinates coordinates,
             StreamShardingSettings shardingSettings,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken = default) =>
             ReadAsync(coordinates, shardingSettings, int.MaxValue, cancellationToken);
 
         public async Task<(ReadStreamQuery query, ReadStreamResult result)> ReadAsync(
@@ -50,9 +50,15 @@ namespace Vostok.Hercules.Consumers
             return (query, result.FromGenericResult());
         }
 
-        public Task<long> CountStreamRemainingEvents(
+        public Task<StreamCoordinates> SeekToEndAsync(
+            StreamShardingSettings shardingSettings,
+            CancellationToken cancellationToken = default) =>
+            reader.SeekToEndAsync(shardingSettings, cancellationToken);
+
+        public Task<long> CountStreamRemainingEventsAsync(
             StreamCoordinates coordinates,
-            StreamShardingSettings shardingSettings) =>
-            reader.CountStreamRemainingEvents(coordinates, shardingSettings);
+            StreamShardingSettings shardingSettings,
+            CancellationToken cancellationToken = default) =>
+            reader.CountStreamRemainingEventsAsync(coordinates, shardingSettings, cancellationToken);
     }
 }

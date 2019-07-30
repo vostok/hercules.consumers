@@ -25,14 +25,14 @@ namespace Vostok.Hercules.Consumers
         public Task<(ReadStreamQuery query, ReadStreamResult<T> result)> ReadAsync(
             StreamCoordinates coordinates,
             StreamShardingSettings shardingSettings,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken = default) =>
             ReadAsync(coordinates, shardingSettings, int.MaxValue, cancellationToken);
 
         public async Task<(ReadStreamQuery query, ReadStreamResult<T> result)> ReadAsync(
             StreamCoordinates coordinates,
             StreamShardingSettings shardingSettings,
             long additionalLimit,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken = default)
         {
             log.Info(
                 "Reading logical shard with index {ClientShard} from {ClientShardCount}.",
@@ -61,20 +61,28 @@ namespace Vostok.Hercules.Consumers
             return (eventsQuery, readResult);
         }
 
-        public async Task<long> CountStreamRemainingEvents(
+        public async Task<StreamCoordinates> SeekToEndAsync(
+            StreamShardingSettings shardingSettings,
+            CancellationToken cancellationToken = default)
+        {
+            var seekToEndQuery = new SeekToEndStreamQuery(settings.StreamName)
+            {
+                ClientShard = shardingSettings.ClientShardIndex,
+                ClientShardCount = shardingSettings.ClientShardCount
+            };
+
+            var end = await settings.StreamClient.SeekToEndAsync(seekToEndQuery, settings.EventsReadTimeout, cancellationToken).ConfigureAwait(false);
+            return end.Payload.Next;
+        }
+
+        public async Task<long> CountStreamRemainingEventsAsync(
             StreamCoordinates coordinates,
-            StreamShardingSettings shardingSettings)
+            StreamShardingSettings shardingSettings,
+            CancellationToken cancellationToken = default)
         {
             try
             {
-                var seekToEndQuery = new SeekToEndStreamQuery(settings.StreamName)
-                {
-                    ClientShard = shardingSettings.ClientShardIndex,
-                    ClientShardCount = shardingSettings.ClientShardCount
-                };
-
-                var end = await settings.StreamClient.SeekToEndAsync(seekToEndQuery, settings.EventsReadTimeout).ConfigureAwait(false);
-                var endCoordinates = end.Payload.Next;
+                var endCoordinates = await SeekToEndAsync(shardingSettings, cancellationToken).ConfigureAwait(false);
 
                 var distance = StreamCoordinatesMerger.Distance(coordinates, endCoordinates);
 
