@@ -1,15 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Vostok.Commons.Helpers.Extensions;
-using Vostok.Hercules.Client.Abstractions.Events;
 using Vostok.Hercules.Client.Abstractions.Models;
 using Vostok.Hercules.Consumers.Helpers;
 using Vostok.Logging.Abstractions;
 using Vostok.Metrics.Grouping;
 using Vostok.Metrics.Primitives.Gauge;
+using Vostok.Metrics.Primitives.Timer;
 
 // ReSharper disable MethodSupportsCancellation
 
@@ -23,7 +22,9 @@ namespace Vostok.Hercules.Consumers
         private readonly StreamConsumerSettings settings;
         private readonly ILog log;
         private readonly StreamReader streamReader;
-        private IMetricGroup1<IIntegerGauge> eventsMetric;
+        private readonly IMetricGroup1<IIntegerGauge> eventsMetric;
+        private readonly IMetricGroup1<ITimer> iterationMetric;
+
         private StreamCoordinates coordinates;
         private StreamShardingSettings shardingSettings;
 
@@ -43,6 +44,7 @@ namespace Vostok.Hercules.Consumers
                 log);
 
             eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
+            iterationMetric = settings.MetricContext?.CreateSummary("iteration", "type", new SummaryConfig { Quantiles = new[] { 0.5, 0.75, 1 } });
             settings.MetricContext?.CreateFuncGauge("events", "type").For("remaining").SetValueProvider(CountStreamRemainingEvents);
         }
 
@@ -70,25 +72,10 @@ namespace Vostok.Hercules.Consumers
                         shardingSettings = newShardingSettings;
                     }
 
-                    var (query, result) = await streamReader.ReadAsync(coordinates, shardingSettings, cancellationToken).ConfigureAwait(false);
-                    var events = result.Payload.Events;
-
-                    LogProgress(events);
-
-                    if (events.Count != 0 || settings.HandleWithoutEvents)
+                    using (iterationMetric?.For("time").Measure())
                     {
-                        await settings.EventsHandler.HandleAsync(query, result, cancellationToken).ConfigureAwait(false);
+                        await MakeIteration(cancellationToken).ConfigureAwait(false);
                     }
-
-                    var newCoordinates = coordinates = StreamCoordinatesMerger.MergeMax(coordinates, result.Payload.Next);
-
-                    if (events.Count == 0)
-                    {
-                        await Task.Delay(settings.DelayOnNoEvents, cancellationToken).ConfigureAwait(false);
-                        continue;
-                    }
-
-                    Task.Run(() => settings.CoordinatesStorage.AdvanceAsync(newCoordinates));
                 }
                 catch (Exception error)
                 {
@@ -102,10 +89,33 @@ namespace Vostok.Hercules.Consumers
             }
         }
 
-        private void LogProgress(IList<HerculesEvent> events)
+        private async Task MakeIteration(CancellationToken cancellationToken)
         {
-            log.Info("Consumer progress: events in: {EventsIn}.", events.Count);
-            eventsMetric?.For("in").Add(events.Count);
+            var (query, result) = await streamReader.ReadAsync(coordinates, shardingSettings, cancellationToken).ConfigureAwait(false);
+            var events = result.Payload.Events;
+
+            LogProgress(events.Count);
+
+            if (events.Count != 0 || settings.HandleWithoutEvents)
+            {
+                await settings.EventsHandler.HandleAsync(query, result, cancellationToken).ConfigureAwait(false);
+            }
+
+            var newCoordinates = coordinates = StreamCoordinatesMerger.MergeMax(coordinates, result.Payload.Next);
+
+            if (events.Count == 0)
+            {
+                await Task.Delay(settings.DelayOnNoEvents, cancellationToken).ConfigureAwait(false);
+            }
+
+            Task.Run(() => settings.CoordinatesStorage.AdvanceAsync(newCoordinates));
+        }
+
+        private void LogProgress(int eventsIn)
+        {
+            log.Info("Consumer progress: events in: {EventsIn}.", eventsIn);
+            eventsMetric?.For("in").Add(eventsIn);
+            iterationMetric?.For("in").Report(eventsIn);
         }
 
         private double CountStreamRemainingEvents()
