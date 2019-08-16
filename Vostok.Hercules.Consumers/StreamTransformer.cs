@@ -113,8 +113,6 @@ namespace Vostok.Hercules.Consumers
                         insertResult.EnsureSuccess();
 
                         pointer += settings.EventsWriteBatchSize;
-
-                        break;
                     }
                     catch (Exception e)
                     {
