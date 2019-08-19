@@ -65,7 +65,6 @@ namespace Vostok.Hercules.Consumers
                 writer = new StreamWriter(
                     new StreamWriterSettings(settings.TargetStreamName, settings.GateClient)
                     {
-                        DelayOnError = settings.DelayOnError,
                         EventsWriteBatchSize = settings.EventsWriteBatchSize,
                         EventsWriteTimeout = settings.EventsWriteTimeout
                     },

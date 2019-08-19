@@ -22,7 +22,5 @@ namespace Vostok.Hercules.Consumers
         public int EventsWriteBatchSize { get; set; } = 10_000;
 
         public TimeSpan EventsWriteTimeout { get; set; } = TimeSpan.FromSeconds(45);
-
-        public TimeSpan DelayOnError { get; set; } = TimeSpan.FromSeconds(5);
     }
 }
