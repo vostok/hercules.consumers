@@ -48,12 +48,13 @@ namespace Vostok.Hercules.Consumers
         private class TransformingEventHandler : IStreamEventsHandler
         {
             private readonly StreamTransformerSettings settings;
+            private readonly StreamWriter writer;
             private readonly ILog log;
 
             private readonly List<HerculesEvent> buffer;
-            private IMetricGroup1<IIntegerGauge> eventsMetric;
             private readonly IMetricGroup1<ITimer> iterationMetric;
-            
+            private IMetricGroup1<IIntegerGauge> eventsMetric;
+
             public TransformingEventHandler(StreamTransformerSettings settings, ILog log)
             {
                 this.settings = settings;
@@ -61,8 +62,17 @@ namespace Vostok.Hercules.Consumers
 
                 buffer = new List<HerculesEvent>();
 
+                writer = new StreamWriter(
+                    new StreamWriterSettings(settings.TargetStreamName, settings.GateClient)
+                    {
+                        DelayOnError = settings.DelayOnError,
+                        EventsWriteBatchSize = settings.EventsWriteBatchSize,
+                        EventsWriteTimeout = settings.EventsWriteTimeout
+                    },
+                    log);
+
                 eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
-                iterationMetric = settings.MetricContext?.CreateSummary("iteration", "type", new SummaryConfig { Quantiles = new[] { 0.5, 0.75, 1 } });
+                iterationMetric = settings.MetricContext?.CreateSummary("iteration", "type", new SummaryConfig {Quantiles = new[] {0.5, 0.75, 1}});
             }
 
             public async Task HandleAsync(ReadStreamQuery query, ReadStreamResult streamResult, CancellationToken cancellationToken)
@@ -86,40 +96,13 @@ namespace Vostok.Hercules.Consumers
 
                 using (iterationMetric?.For("write_time").Measure())
                 {
-                    await WriteEvents(buffer, cancellationToken).ConfigureAwait(false);
+                    await writer.WriteEvents(buffer, cancellationToken).ConfigureAwait(false);
                 }
 
                 log.Info("Inserted {EventsCount} event(s) into target stream '{TargetStream}'.", buffer.Count, settings.TargetStreamName);
                 eventsMetric?.For("out").Add(buffer.Count);
-                
+
                 buffer.Clear();
-            }
-
-            private async Task WriteEvents(IList<HerculesEvent> events, CancellationToken cancellationToken)
-            {
-                var pointer = 0;
-                while (pointer < events.Count)
-                {
-                    try
-                    {
-                        var insertQuery = new InsertEventsQuery(
-                            settings.TargetStreamName,
-                            events.Skip(pointer).Take(settings.EventsWriteBatchSize).ToList());
-
-                        var insertResult = await settings.GateClient
-                            .InsertAsync(insertQuery, settings.EventsWriteTimeout, cancellationToken)
-                            .ConfigureAwait(false);
-
-                        insertResult.EnsureSuccess();
-
-                        pointer += settings.EventsWriteBatchSize;
-                    }
-                    catch (Exception e)
-                    {
-                        log.Error(e, "Failed to send aggregated events.");
-                        await Task.Delay(settings.DelayOnError, cancellationToken).ConfigureAwait(false);
-                    }
-                }
             }
 
             private IEnumerable<HerculesEvent> Transform(HerculesEvent @event)

@@ -31,7 +31,7 @@ namespace Vostok.Hercules.Consumers
         private StreamShardingSettings shardingSettings;
 
         private volatile bool restart;
-        
+
         public StreamConsumer([NotNull] StreamConsumerSettings settings, [CanBeNull] ILog log)
         {
             this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
@@ -48,7 +48,7 @@ namespace Vostok.Hercules.Consumers
                 log);
 
             eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
-            iterationMetric = settings.MetricContext?.CreateSummary("iteration", "type", new SummaryConfig { Quantiles = new[] { 0.5, 0.75, 1 } });
+            iterationMetric = settings.MetricContext?.CreateSummary("iteration", "type", new SummaryConfig {Quantiles = new[] {0.5, 0.75, 1}});
             settings.MetricContext?.CreateFuncGauge("events", "type").For("remaining").SetValueProvider(CountStreamRemainingEvents);
         }
 
