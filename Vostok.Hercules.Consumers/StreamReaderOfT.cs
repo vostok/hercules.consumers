@@ -51,22 +51,22 @@ namespace Vostok.Hercules.Consumers
             };
 
             ReadStreamResult<T> readResult;
-            var attempt = 0;
+            var remainingAttempts = settings.EventsReadAttempts;
 
             do
             {
-                attempt++;
+                remainingAttempts--;
                 readResult = await settings.StreamClient.ReadAsync(eventsQuery, settings.EventsReadTimeout, cancellationToken).ConfigureAwait(false);
                 if (!readResult.IsSuccessful)
                 {
                     log.Error(
                         "Failed to read events from Hercules stream '{StreamName}'. Will try again {RemainingAttempts} more times.",
                         settings.StreamName,
-                        settings.EventsReadAttempts - attempt);
-                    if (attempt < settings.EventsReadAttempts)
+                        remainingAttempts);
+                    if (remainingAttempts > 0)
                         await Task.Delay(settings.DelayOnError, cancellationToken).SilentlyContinue().ConfigureAwait(false);
                 }
-            } while (attempt < settings.EventsReadAttempts && !readResult.IsSuccessful);
+            } while (!readResult.IsSuccessful && remainingAttempts > 0);
 
             log.Info(
                 "Read {EventsCount} event(s) from Hercules stream '{StreamName}'.",
