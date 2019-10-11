@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Vostok.Commons.Helpers.Extensions;
 using Vostok.Hercules.Client.Abstractions.Models;
 using Vostok.Hercules.Client.Abstractions.Queries;
 using Vostok.Hercules.Client.Abstractions.Results;
@@ -49,7 +50,23 @@ namespace Vostok.Hercules.Consumers
                 Limit = (int)Math.Min(settings.EventsBatchSize, additionalLimit)
             };
 
-            var readResult = await settings.StreamClient.ReadAsync(eventsQuery, settings.EventsReadTimeout, cancellationToken).ConfigureAwait(false);
+            ReadStreamResult<T> readResult;
+            var attempt = 0;
+
+            do
+            {
+                attempt++;
+                readResult = await settings.StreamClient.ReadAsync(eventsQuery, settings.EventsReadTimeout, cancellationToken).ConfigureAwait(false);
+                if (!readResult.IsSuccessful)
+                {
+                    log.Error(
+                        "Failed to read events from Hercules stream '{StreamName}'. Will try again {RemainingAttempts} more times.",
+                        settings.StreamName,
+                        settings.EventsReadAttempts - attempt);
+                    if (attempt < settings.EventsReadAttempts)
+                        await Task.Delay(settings.DelayOnError, cancellationToken).SilentlyContinue().ConfigureAwait(false);
+                }
+            } while (attempt < settings.EventsReadAttempts && !readResult.IsSuccessful);
 
             log.Info(
                 "Read {EventsCount} event(s) from Hercules stream '{StreamName}'.",

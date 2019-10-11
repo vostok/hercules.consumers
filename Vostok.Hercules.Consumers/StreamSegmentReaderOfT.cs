@@ -28,8 +28,10 @@ namespace Vostok.Hercules.Consumers
                 settings.StreamName,
                 settings.StreamClient)
             {
-                EventsBatchSize = settings.EventsBatchSize,
-                EventsReadTimeout = settings.EventsReadTimeout
+                EventsBatchSize = settings.EventsReadBatchSize,
+                EventsReadTimeout = settings.EventsReadTimeout,
+                EventsReadAttempts = settings.EventsReadAttempts,
+                DelayOnError = settings.DelayOnError
             };
 
             streamReader = new StreamReader<T>(streamReaderSettings, log);

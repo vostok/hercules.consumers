@@ -53,16 +53,18 @@ namespace Vostok.Hercules.Consumers
         [CanBeNull]
         public IMetricContext MetricContext { get; set; }
 
-        public int EventsReadBatchSize { get; set; } = 10_000;
+        public int EventsReadBatchSize { get; set; } = ConsumersConstants.EventsReadBatchSize;
 
-        public int EventsWriteBatchSize { get; set; } = 10_000;
+        public int EventsWriteBatchSize { get; set; } = ConsumersConstants.EventsWriteBatchSize;
 
-        public TimeSpan EventsReadTimeout { get; set; } = TimeSpan.FromSeconds(45);
+        public TimeSpan EventsReadTimeout { get; set; } = ConsumersConstants.EventsReadTimeout;
 
-        public TimeSpan EventsWriteTimeout { get; set; } = TimeSpan.FromSeconds(45);
+        public TimeSpan EventsWriteTimeout { get; set; } = ConsumersConstants.EventsWriteTimeout;
 
-        public TimeSpan DelayOnError { get; set; } = TimeSpan.FromSeconds(5);
+        public int EventsReadAttempts { get; set; } = ConsumersConstants.EventsReadAttempts;
 
-        public TimeSpan DelayOnNoEvents { get; set; } = TimeSpan.FromSeconds(2);
+        public TimeSpan DelayOnError { get; set; } = ConsumersConstants.DelayOnError;
+
+        public TimeSpan DelayOnNoEvents { get; set; } = ConsumersConstants.DelayOnNoEvents;
     }
 }

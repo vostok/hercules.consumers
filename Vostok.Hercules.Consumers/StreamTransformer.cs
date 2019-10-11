@@ -36,8 +36,9 @@ namespace Vostok.Hercules.Consumers
                 settings.ShardingSettingsProvider)
             {
                 MetricContext = settings.MetricContext,
-                EventsBatchSize = settings.EventsReadBatchSize,
+                EventsReadBatchSize = settings.EventsReadBatchSize,
                 EventsReadTimeout = settings.EventsReadTimeout,
+                EventsReadAttempts = settings.EventsReadAttempts,
                 DelayOnError = settings.DelayOnError,
                 DelayOnNoEvents = settings.DelayOnNoEvents
             };

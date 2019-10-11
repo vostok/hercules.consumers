@@ -33,8 +33,12 @@ namespace Vostok.Hercules.Consumers
         [NotNull]
         public Dictionary<int, StreamPosition> End { get; }
 
-        public int EventsBatchSize { get; set; } = 10000;
+        public int EventsReadBatchSize { get; set; } = ConsumersConstants.EventsReadBatchSize;
 
-        public TimeSpan EventsReadTimeout { get; set; } = TimeSpan.FromSeconds(45);
+        public int EventsReadAttempts { get; set; } = ConsumersConstants.EventsReadAttempts;
+
+        public TimeSpan EventsReadTimeout { get; set; } = ConsumersConstants.EventsReadTimeout;
+
+        public TimeSpan DelayOnError { get; set; } = ConsumersConstants.DelayOnError;
     }
 }

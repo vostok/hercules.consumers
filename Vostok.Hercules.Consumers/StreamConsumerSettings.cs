@@ -42,12 +42,14 @@ namespace Vostok.Hercules.Consumers
 
         public bool HandleWithoutEvents { get; set; }
 
-        public int EventsBatchSize { get; set; } = 10000;
+        public int EventsReadBatchSize { get; set; } = ConsumersConstants.EventsReadBatchSize;
 
-        public TimeSpan EventsReadTimeout { get; set; } = TimeSpan.FromSeconds(45);
+        public TimeSpan EventsReadTimeout { get; set; } = ConsumersConstants.EventsReadTimeout;
 
-        public TimeSpan DelayOnError { get; set; } = TimeSpan.FromSeconds(5);
+        public int EventsReadAttempts { get; set; } = ConsumersConstants.EventsReadAttempts;
 
-        public TimeSpan DelayOnNoEvents { get; set; } = TimeSpan.FromSeconds(2);
+        public TimeSpan DelayOnError { get; set; } = ConsumersConstants.DelayOnError;
+
+        public TimeSpan DelayOnNoEvents { get; set; } = ConsumersConstants.DelayOnNoEvents;
     }
 }

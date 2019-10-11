@@ -41,5 +41,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\vostok.commons.helpers\Vostok.Commons.Helpers\Extensions\TaskExtensions.cs" Link="Commons\TaskExtensions.cs" />
+    <Compile Include="..\..\vostok.commons.time\Vostok.Commons.Time\TimeSpanConversions.cs" Link="Commons\TimeSpanConversions.cs" />
   </ItemGroup>
 </Project>
