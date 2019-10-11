@@ -47,7 +47,7 @@ namespace Vostok.Hercules.Consumers
                 Coordinates = coordinates,
                 ClientShard = shardingSettings.ClientShardIndex,
                 ClientShardCount = shardingSettings.ClientShardCount,
-                Limit = (int)Math.Min(settings.EventsBatchSize, additionalLimit)
+                Limit = (int)Math.Min(settings.EventsReadBatchSize, additionalLimit)
             };
 
             ReadStreamResult<T> readResult;

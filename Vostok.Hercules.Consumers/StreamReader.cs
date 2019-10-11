@@ -28,7 +28,7 @@ namespace Vostok.Hercules.Consumers
                 settings.StreamClient.ToGenericClient())
             {
                 EventsReadTimeout = settings.EventsReadTimeout,
-                EventsBatchSize = settings.EventsReadBatchSize,
+                EventsReadBatchSize = settings.EventsReadBatchSize,
                 EventsReadAttempts = settings.EventsReadAttempts,
                 DelayOnError = settings.DelayOnError
             };

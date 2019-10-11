@@ -7,9 +7,9 @@ namespace Vostok.Hercules.Consumers
     [PublicAPI]
     public static class ConsumersConstants
     {
-        public static readonly int EventsReadBatchSize = 10000;
+        public static readonly int EventsReadBatchSize = 10_000;
 
-        public static readonly int EventsWriteBatchSize = 10000;
+        public static readonly int EventsWriteBatchSize = 10_000;
 
         public static readonly TimeSpan EventsReadTimeout = 10.Seconds();
 

@@ -19,7 +19,7 @@ namespace Vostok.Hercules.Consumers
         [NotNull]
         public IHerculesStreamClient<T> StreamClient { get; }
 
-        public int EventsBatchSize { get; set; } = ConsumersConstants.EventsReadBatchSize;
+        public int EventsReadBatchSize { get; set; } = ConsumersConstants.EventsReadBatchSize;
 
         public int EventsReadAttempts { get; set; } = ConsumersConstants.EventsReadAttempts;
 
