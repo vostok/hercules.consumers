@@ -76,7 +76,7 @@ namespace Vostok.Hercules.Consumers.Tests.Helpers
         }
 
         [Test]
-        public void FixInitialCoordinates_should_works_correctly()
+        public void FixQueryCoordinates_should_works_correctly()
         {
             var a = new StreamCoordinates(
                 new[]
