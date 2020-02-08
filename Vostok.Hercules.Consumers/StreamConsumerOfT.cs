@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -99,10 +100,24 @@ namespace Vostok.Hercules.Consumers
 
         private async Task Restart(CancellationToken cancellationToken)
         {
-            coordinates = await settings.CoordinatesStorage.GetCurrentAsync().ConfigureAwait(false);
-            if (coordinates.Equals(StreamCoordinates.Empty))
-                coordinates = await streamReader.SeekToEndAsync(shardingSettings, cancellationToken).ConfigureAwait(false);
-            log.Info("Updated coordinates from storage: {StreamCoordinates}.", coordinates);
+            log.Info("Current coordinates: {StreamCoordinates}.", coordinates);
+
+            var endCoordinates = await streamReader.SeekToEndAsync(shardingSettings, cancellationToken).ConfigureAwait(false);
+            log.Info("End coordinates: {StreamCoordinates}.", endCoordinates);
+
+            var storageCoordinates = await settings.CoordinatesStorage.GetCurrentAsync().ConfigureAwait(false);
+            log.Info("Storage coordinates: {StreamCoordinates}.", storageCoordinates);
+
+            // Note(kungurtsev): some coordinates are missing.
+            if (endCoordinates.Positions.Any(p => storageCoordinates.Positions.All(pp => pp.Partition != p.Partition)))
+            {
+                log.Info("Returning end coordinates: {StreamCoordinates}.", endCoordinates);
+                coordinates = endCoordinates;
+                return;
+            }
+
+            log.Info("Returning storage coordinates: {StreamCoordinates}.", storageCoordinates);
+            coordinates = storageCoordinates;
         }
 
         private async Task MakeIteration(CancellationToken cancellationToken)
@@ -125,14 +140,14 @@ namespace Vostok.Hercules.Consumers
                 }
             }
 
-            var newCoordinates = coordinates = StreamCoordinatesMerger.MergeMax(coordinates, result.Payload.Next);
+            coordinates = result.Payload.Next;
 
             if (events.Count == 0)
             {
                 await Task.Delay(settings.DelayOnNoEvents, cancellationToken).ConfigureAwait(false);
             }
 
-            Task.Run(() => settings.CoordinatesStorage.AdvanceAsync(newCoordinates));
+            Task.Run(() => settings.CoordinatesStorage.AdvanceAsync(coordinates));
         }
 
         private void LogProgress(int eventsIn)

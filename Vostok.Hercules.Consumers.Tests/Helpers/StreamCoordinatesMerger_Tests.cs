@@ -105,7 +105,7 @@ namespace Vostok.Hercules.Consumers.Tests.Helpers
                     new StreamPosition {Partition = 5, Offset = 0}
                 });
 
-            StreamCoordinatesMerger.FixInitialCoordinates(a, b).Positions.Should().BeEquivalentTo(@fixed.Positions);
+            StreamCoordinatesMerger.FixQueryCoordinates(a, b).Positions.Should().BeEquivalentTo(@fixed.Positions);
         }
 
         [Test]

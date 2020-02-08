@@ -58,7 +58,7 @@ namespace Vostok.Hercules.Consumers.Helpers
         /// <summary>
         /// Add zeros to left, filter by right partitions.
         /// </summary>
-        public static StreamCoordinates FixInitialCoordinates([NotNull] StreamCoordinates left, [NotNull] StreamCoordinates right)
+        public static StreamCoordinates FixQueryCoordinates([NotNull] StreamCoordinates left, [NotNull] StreamCoordinates right)
         {
             var map = left.ToDictionary();
             var result = new List<StreamPosition>();
