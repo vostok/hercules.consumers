@@ -114,11 +114,19 @@ namespace Vostok.Hercules.Consumers
 
         private async Task MakeIteration(CancellationToken cancellationToken)
         {
-            var (_, result) = await ReadAsync(cancellationToken).ConfigureAwait(false);
+            RawReadStreamPayload result;
+
+            using (iterationMetric?.For("read_time").Measure())
+            {
+                (_, result) = await ReadAsync(cancellationToken).ConfigureAwait(false);
+            }
 
             try
             {
-                HandleEvents(result);
+                using (iterationMetric?.For("handle_time").Measure())
+                {
+                    HandleEvents(result);
+                }
 
                 coordinates = result.Next;
                 
