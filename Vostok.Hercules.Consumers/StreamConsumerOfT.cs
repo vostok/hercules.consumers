@@ -7,7 +7,6 @@ using Vostok.Commons.Helpers.Extensions;
 using Vostok.Hercules.Client.Abstractions.Models;
 using Vostok.Hercules.Client.Abstractions.Queries;
 using Vostok.Hercules.Client.Abstractions.Results;
-using Vostok.Hercules.Consumers.Helpers;
 using Vostok.Logging.Abstractions;
 using Vostok.Metrics.Grouping;
 using Vostok.Metrics.Primitives.Gauge;
@@ -132,7 +131,7 @@ namespace Vostok.Hercules.Consumers
             var events = result.Payload.Events;
             LogProgress(events.Count);
 
-            if (events.Count != 0 || settings.HandleWithoutEvents)
+            if (events.Count != 0)
             {
                 using (iterationMetric?.For("handle_time").Measure())
                 {
