@@ -15,25 +15,14 @@ namespace Vostok.Hercules.Consumers
     public class StreamReader
     {
         private readonly StreamReader<HerculesEvent> reader;
-        private readonly ILog log;
 
         public StreamReader([NotNull] StreamReaderSettings settings, [CanBeNull] ILog log)
         {
             if (settings == null)
                 throw new ArgumentNullException(nameof(settings));
-            this.log = (log ?? LogProvider.Get()).ForContext<StreamReader>();
+            log = (log ?? LogProvider.Get()).ForContext<StreamReader>();
 
-            var genericSettings = new StreamReaderSettings<HerculesEvent>(
-                settings.StreamName,
-                settings.StreamClient.ToGenericClient())
-            {
-                EventsReadTimeout = settings.EventsReadTimeout,
-                EventsReadBatchSize = settings.EventsReadBatchSize,
-                EventsReadAttempts = settings.EventsReadAttempts,
-                DelayOnError = settings.DelayOnError
-            };
-
-            reader = new StreamReader<HerculesEvent>(genericSettings, log);
+            reader = new StreamReader<HerculesEvent>(settings, log);
         }
 
         public Task<(ReadStreamQuery query, ReadStreamResult result)> ReadAsync(
