@@ -222,7 +222,7 @@ namespace Vostok.Hercules.Consumers
                 ClientShardCount = shardingSettings.ClientShardCount
             };
 
-            var end = await client.SeekToEndAsync(seekToEndQuery, settings.EventsReadTimeout, cancellationToken).ConfigureAwait(false);
+            var end = await client.SeekToEndAsync(seekToEndQuery, settings.ApiKeyProvider(), settings.EventsReadTimeout, cancellationToken).ConfigureAwait(false);
             return end.Payload.Next;
         }
 
