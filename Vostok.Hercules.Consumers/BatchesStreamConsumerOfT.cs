@@ -35,6 +35,7 @@ namespace Vostok.Hercules.Consumers
         private StreamCoordinates coordinates;
         private StreamShardingSettings shardingSettings;
 
+        private volatile int iteration;
         private volatile bool restart;
         private volatile Task<(StreamCoordinates query, RawReadStreamPayload result)> readTask;
 
@@ -70,6 +71,7 @@ namespace Vostok.Hercules.Consumers
                         restart = false;
                     }
 
+                    using (new OperationContextToken($"Iteration-{iteration++}"))
                     using (iterationMetric?.For("time").Measure())
                     {
                         await MakeIteration(cancellationToken).ConfigureAwait(false);
