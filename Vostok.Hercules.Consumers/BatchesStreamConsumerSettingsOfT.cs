@@ -42,10 +42,10 @@ namespace Vostok.Hercules.Consumers
         public Action<T> OnEvent { get; }
 
         [CanBeNull]
-        public Action<StreamCoordinates> OnBatchBegin { get; }
+        public Action<StreamCoordinates> OnBatchBegin { get; set; }
 
         [CanBeNull]
-        public Action<StreamCoordinates> OnBatchEnd { get; }
+        public Action<StreamCoordinates> OnBatchEnd { get; set; }
 
         [NotNull]
         public Func<IBinaryBufferReader, IHerculesEventBuilder<T>> EventBuilderProvider { get; }
