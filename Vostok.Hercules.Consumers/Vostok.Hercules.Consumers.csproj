@@ -51,6 +51,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\vostok.clusterclient.transport\Vostok.ClusterClient.Transport\bin\Release\netstandard2.0\Vostok.ClusterClient.Transport.dll</HintPath>
     </Reference>
+    <Reference Include="Vostok.Logging.Context">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\vostok.logging.context\Vostok.Logging.Context\bin\Release\netstandard2.0\Vostok.Logging.Context.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\vostok.commons.binary\Vostok.Commons.Binary\BinaryBufferReader.cs" Link="Commons\BinaryBufferReader.cs" />
@@ -133,6 +137,6 @@
       <MergeAssemblies Include="$(ProjectDir)$(OutputPath)$(AssemblyName).dll" />
       <MergeAssemblies Include="$(PubDir)Kontur.Lz4.dll" />
     </ItemGroup>
-    <Exec WorkingDirectory="$(PubDir)" Command="$(ILRepackExecutable) /internalize /renameInternalized /log:ilrepack.log /lib:&quot;$(PubDirWithoutSlash)&quot; /out:$(ProjectDir)$(OutputPath)$(AssemblyName).dll @(MergeAssemblies->'%(RelativeDir)%(FileName)%(Extension)', ' ')" />
+    <Exec WorkingDirectory="$(PubDir)" Command="$(ILRepackExecutable) /internalize /renameInternalized /log:ilrepack.log /lib:&quot;$(PubDirWithoutSlash)&quot; /out:$(ProjectDir)$(OutputPath)$(AssemblyName).dll @(MergeAssemblies-&gt;'%(RelativeDir)%(FileName)%(Extension)', ' ')" />
   </Target>
 </Project>
