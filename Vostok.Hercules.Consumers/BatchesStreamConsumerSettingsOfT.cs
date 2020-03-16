@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 using Vostok.Clusterclient.Core;
 using Vostok.Clusterclient.Core.Topology;
 using Vostok.Hercules.Client.Abstractions.Events;
+using Vostok.Hercules.Client.Abstractions.Models;
 using Vostok.Metrics;
 
 namespace Vostok.Hercules.Consumers
@@ -39,6 +40,12 @@ namespace Vostok.Hercules.Consumers
 
         [NotNull]
         public Action<T> OnEvent { get; }
+
+        [CanBeNull]
+        public Action<StreamCoordinates> OnBatchBegin { get; }
+
+        [CanBeNull]
+        public Action<StreamCoordinates> OnBatchEnd { get; }
 
         [NotNull]
         public Func<IBinaryBufferReader, IHerculesEventBuilder<T>> EventBuilderProvider { get; }

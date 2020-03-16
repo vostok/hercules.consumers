@@ -115,21 +115,26 @@ namespace Vostok.Hercules.Consumers
         private async Task MakeIteration(CancellationToken cancellationToken)
         {
             RawReadStreamPayload result;
+            StreamCoordinates queryCoordinates;
 
             using (iterationMetric?.For("read_time").Measure())
             {
-                (_, result) = await ReadAsync(cancellationToken).ConfigureAwait(false);
+                (queryCoordinates, result) = await ReadAsync(cancellationToken).ConfigureAwait(false);
             }
 
             try
             {
+                settings.OnBatchBegin?.Invoke(queryCoordinates);
+
                 using (iterationMetric?.For("handle_time").Measure())
                 {
                     HandleEvents(result);
                 }
 
                 coordinates = result.Next;
-                
+
+                settings.OnBatchEnd?.Invoke(coordinates);
+
                 Task.Run(() => settings.CoordinatesStorage.AdvanceAsync(coordinates));
             }
             finally
