@@ -60,8 +60,9 @@ namespace Vostok.Hercules.Consumers
                 if (!readResult.IsSuccessful)
                 {
                     log.Error(
-                        "Failed to read events from Hercules stream '{StreamName}'. Will try again {RemainingAttempts} more times.",
+                        "Failed to read events from Hercules stream '{StreamName}' due to error '{Error}'. Will try again {RemainingAttempts} more times.",
                         settings.StreamName,
+                        readResult.ErrorDetails,
                         remainingAttempts);
                     if (remainingAttempts > 0)
                         await Task.Delay(settings.DelayOnError, cancellationToken).SilentlyContinue().ConfigureAwait(false);

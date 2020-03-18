@@ -21,8 +21,8 @@ namespace Vostok.Hercules.Consumers
 
         public static readonly int EventsReadAttempts = 3;
 
-        public static readonly TimeSpan DelayOnError = 2.Seconds();
+        public static readonly TimeSpan DelayOnError = 0.1.Seconds();
 
-        public static readonly TimeSpan DelayOnNoEvents = 2.Seconds();
+        public static readonly TimeSpan DelayOnNoEvents = 1.Seconds();
     }
 }

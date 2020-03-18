@@ -67,14 +67,14 @@ namespace Vostok.Hercules.Consumers
 
                     if (restart)
                     {
-                        await Restart(cancellationToken).ConfigureAwait(false);
+                        await Restart().ConfigureAwait(false);
                         restart = false;
                     }
 
                     using (new OperationContextToken($"Iteration-{iteration++}"))
                     using (iterationMetric?.For("time").Measure())
                     {
-                        await MakeIteration(cancellationToken).ConfigureAwait(false);
+                        await MakeIteration().ConfigureAwait(false);
                     }
                 }
                 catch (Exception error)
@@ -89,7 +89,7 @@ namespace Vostok.Hercules.Consumers
             }
         }
 
-        private async Task Restart(CancellationToken cancellationToken)
+        private async Task Restart()
         {
             using (new OperationContextToken("Restart"))
             {
@@ -102,7 +102,7 @@ namespace Vostok.Hercules.Consumers
 
                 log.Info("Current coordinates: {StreamCoordinates}.", coordinates);
 
-                var endCoordinates = await SeekToEndAsync(cancellationToken).ConfigureAwait(false);
+                var endCoordinates = await SeekToEndAsync().ConfigureAwait(false);
                 log.Info("End coordinates: {StreamCoordinates}.", endCoordinates);
 
                 var storageCoordinates = await settings.CoordinatesStorage.GetCurrentAsync().ConfigureAwait(false);
@@ -121,16 +121,16 @@ namespace Vostok.Hercules.Consumers
             }
         }
 
-        private async Task MakeIteration(CancellationToken cancellationToken)
+        private async Task MakeIteration()
         {
-            var (queryCoordinates, result) = await (readTask ?? ReadAsync(cancellationToken)).ConfigureAwait(false);
+            var (queryCoordinates, result) = await (readTask ?? ReadAsync()).ConfigureAwait(false);
 
             try
             {
                 settings.OnBatchBegin?.Invoke(queryCoordinates);
 
                 coordinates = result.Next;
-                readTask = ReadAsync(cancellationToken);
+                readTask = ReadAsync();
 
                 HandleEvents(result);
 
@@ -182,7 +182,7 @@ namespace Vostok.Hercules.Consumers
             }
         }
 
-        private async Task<(StreamCoordinates query, RawReadStreamPayload result)> ReadAsync(CancellationToken cancellationToken = default)
+        private async Task<(StreamCoordinates query, RawReadStreamPayload result)> ReadAsync()
         {
             using (new OperationContextToken("ReadEvents"))
             using (iterationMetric?.For("read_time").Measure())
@@ -206,13 +206,14 @@ namespace Vostok.Hercules.Consumers
 
                 do
                 {
-                    readResult = await client.ReadAsync(eventsQuery, settings.ApiKeyProvider(), settings.EventsReadTimeout, cancellationToken).ConfigureAwait(false);
+                    readResult = await client.ReadAsync(eventsQuery, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
                     if (!readResult.IsSuccessful)
                     {
                         log.Error(
-                            "Failed to read events from Hercules stream '{StreamName}'.",
-                            settings.StreamName);
-                        await Task.Delay(settings.DelayOnError, cancellationToken).SilentlyContinue().ConfigureAwait(false);
+                            "Failed to read events from Hercules stream '{StreamName}' due to error '{Error}'.",
+                            settings.StreamName,
+                            readResult.ErrorDetails);
+                        await Task.Delay(settings.DelayOnError).SilentlyContinue().ConfigureAwait(false);
                     }
                 } while (!readResult.IsSuccessful);
 
@@ -227,8 +228,7 @@ namespace Vostok.Hercules.Consumers
             }
         }
 
-        private async Task<StreamCoordinates> SeekToEndAsync(
-            CancellationToken cancellationToken = default)
+        private async Task<StreamCoordinates> SeekToEndAsync()
         {
             var seekToEndQuery = new SeekToEndStreamQuery(settings.StreamName)
             {
@@ -236,7 +236,7 @@ namespace Vostok.Hercules.Consumers
                 ClientShardCount = shardingSettings.ClientShardCount
             };
 
-            var end = await client.SeekToEndAsync(seekToEndQuery, settings.ApiKeyProvider(), settings.EventsReadTimeout, cancellationToken).ConfigureAwait(false);
+            var end = await client.SeekToEndAsync(seekToEndQuery, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
             return end.Payload.Next;
         }
 
