@@ -213,8 +213,10 @@ namespace Vostok.Hercules.Consumers
                     if (!readResult.IsSuccessful)
                     {
                         log.Error(
-                            "Failed to read events from Hercules stream '{StreamName}' due to error '{Error}'.",
+                            "Failed to read events from Hercules stream '{StreamName}'. " +
+                            "Status: {Status}. Error: '{Error}'.",
                             settings.StreamName,
+                            readResult.Status,
                             readResult.ErrorDetails);
                         await Task.Delay(settings.DelayOnError).SilentlyContinue().ConfigureAwait(false);
                     }

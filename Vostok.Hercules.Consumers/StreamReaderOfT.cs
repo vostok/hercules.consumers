@@ -60,8 +60,11 @@ namespace Vostok.Hercules.Consumers
                 if (!readResult.IsSuccessful)
                 {
                     log.Error(
-                        "Failed to read events from Hercules stream '{StreamName}' due to error '{Error}'. Will try again {RemainingAttempts} more times.",
+                        "Failed to read events from Hercules stream '{StreamName}'. " +
+                        "Status: {Status}. Error: '{Error}'. " +
+                        "Will try again {RemainingAttempts} more times.",
                         settings.StreamName,
+                        readResult.Status,
                         readResult.ErrorDetails,
                         remainingAttempts);
                     if (remainingAttempts > 0)
