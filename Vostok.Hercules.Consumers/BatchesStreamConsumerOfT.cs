@@ -38,6 +38,7 @@ namespace Vostok.Hercules.Consumers
         private volatile int iteration;
         private volatile bool restart;
         private volatile Task<(StreamCoordinates query, RawReadStreamPayload result)> readTask;
+        private volatile Task saveCoordinatesTask;
 
         public BatchesStreamConsumer([NotNull] BatchesStreamConsumerSettings<T> settings, [CanBeNull] ILog log)
         {
@@ -87,6 +88,8 @@ namespace Vostok.Hercules.Consumers
                     await Task.Delay(settings.DelayOnError, cancellationToken).SilentlyContinue().ConfigureAwait(false);
                 }
             }
+
+            await (saveCoordinatesTask ?? Task.CompletedTask).ConfigureAwait(false);
         }
 
         private async Task Restart()
@@ -136,7 +139,7 @@ namespace Vostok.Hercules.Consumers
 
                 settings.OnBatchEnd?.Invoke(coordinates);
 
-                Task.Run(() => settings.CoordinatesStorage.AdvanceAsync(coordinates));
+                saveCoordinatesTask = settings.CoordinatesStorage.AdvanceAsync(coordinates);
             }
             finally
             {
