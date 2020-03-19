@@ -90,6 +90,7 @@ namespace Vostok.Hercules.Consumers
             }
 
             await (saveCoordinatesTask ?? Task.CompletedTask).ConfigureAwait(false);
+            log.Info("Final coordinates: {StreamCoordinates}.", coordinates);
         }
 
         private async Task Restart()
