@@ -25,7 +25,7 @@ namespace Vostok.Hercules.Consumers
 
         public int ClientShardCount { get; }
 
-        #region Equality 
+        #region Equality
 
         public bool Equals(StreamShardingSettings other)
             => ClientShardIndex == other?.ClientShardIndex && ClientShardCount == other?.ClientShardCount;

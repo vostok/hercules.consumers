@@ -50,7 +50,7 @@ namespace Vostok.Hercules.Consumers
 
             eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
             iterationMetric = settings.MetricContext?.CreateSummary("iteration", "type", new SummaryConfig {Quantiles = new[] {0.5, 0.75, 1}});
-            settings.MetricContext?.CreateFuncGauge("events", "type").For("remaining").SetValueProvider(CountStreamRemainingEvents);
+            settings.MetricContext?.CreateFuncGauge("events", "type").For("remaining").SetValueProvider(() => CountStreamRemainingEvents());
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)
@@ -83,7 +83,7 @@ namespace Vostok.Hercules.Consumers
                     if (cancellationToken.IsCancellationRequested)
                         return;
 
-                    log.Error(error);
+                    log.Error(error, "Failed to consume batch.");
 
                     await Task.Delay(settings.DelayOnError, cancellationToken).SilentlyContinue().ConfigureAwait(false);
                 }
@@ -213,7 +213,7 @@ namespace Vostok.Hercules.Consumers
                     readResult = await client.ReadAsync(eventsQuery, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
                     if (!readResult.IsSuccessful)
                     {
-                        log.Error(
+                        log.Warn(
                             "Failed to read events from Hercules stream '{StreamName}'. " +
                             "Status: {Status}. Error: '{Error}'.",
                             settings.StreamName,
@@ -253,7 +253,7 @@ namespace Vostok.Hercules.Consumers
             iterationMetric?.For("in").Report(eventsIn);
         }
 
-        private double CountStreamRemainingEvents()
+        private double? CountStreamRemainingEvents()
         {
             try
             {
@@ -271,8 +271,8 @@ namespace Vostok.Hercules.Consumers
             }
             catch (Exception e)
             {
-                log.Error(e, "Failed to count remaining events.");
-                return 0;
+                log.Warn(e, "Failed to count remaining events.");
+                return null;
             }
         }
     }
