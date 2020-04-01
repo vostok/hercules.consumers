@@ -79,6 +79,7 @@
     <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Constants.cs" Link="HerculesInternal\Constants.cs" />
     <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Internal\GateRequestSender.cs" Link="HerculesInternal\GateRequestSender.cs" />
     <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Internal\IGateRequestSender.cs" Link="HerculesInternal\IGateRequestSender.cs" />
+    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Internal\Lz4Helper.cs" Link="HerculesInternal\Lz4Helper.cs" />
     <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Internal\RawReadStreamPayload.cs" Link="HerculesInternal\RawReadStreamPayload.cs" />
     <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Internal\RawReadStreamResult.cs" Link="HerculesInternal\RawReadStreamResult.cs" />
     <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Internal\StreamApiRequestSender.cs" Link="HerculesInternal\StreamApiRequestSender.cs" />
@@ -137,6 +138,6 @@
       <MergeAssemblies Include="$(ProjectDir)$(OutputPath)$(AssemblyName).dll" />
       <MergeAssemblies Include="$(PubDir)Kontur.Lz4.dll" />
     </ItemGroup>
-    <Exec WorkingDirectory="$(PubDir)" Command="$(ILRepackExecutable) /internalize /renameInternalized /log:ilrepack.log /lib:&quot;$(PubDirWithoutSlash)&quot; /out:$(ProjectDir)$(OutputPath)$(AssemblyName).dll @(MergeAssemblies-&gt;'%(RelativeDir)%(FileName)%(Extension)', ' ')" />
+    <Exec WorkingDirectory="$(PubDir)" Command="$(ILRepackExecutable) /internalize /renameInternalized /log:ilrepack.log /lib:&quot;$(PubDirWithoutSlash)&quot; /out:$(ProjectDir)$(OutputPath)$(AssemblyName).dll @(MergeAssemblies->'%(RelativeDir)%(FileName)%(Extension)', ' ')" />
   </Target>
 </Project>
