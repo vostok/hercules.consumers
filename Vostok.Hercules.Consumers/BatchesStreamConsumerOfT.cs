@@ -8,6 +8,7 @@ using Vostok.Commons.Collections;
 using Vostok.Commons.Helpers.Extensions;
 using Vostok.Hercules.Client.Abstractions.Models;
 using Vostok.Hercules.Client.Abstractions.Queries;
+using Vostok.Hercules.Client.Abstractions.Results;
 using Vostok.Hercules.Client.Internal;
 using Vostok.Hercules.Client.Serialization.Readers;
 using Vostok.Hercules.Consumers.Helpers;
@@ -68,7 +69,8 @@ namespace Vostok.Hercules.Consumers
 
                     if (restart)
                     {
-                        await Restart().ConfigureAwait(false);
+                        if (!await Restart().ConfigureAwait(false))
+                            continue;
                         restart = false;
                     }
 
@@ -85,7 +87,7 @@ namespace Vostok.Hercules.Consumers
 
                     log.Error(error, "Failed to consume batch.");
 
-                    await Task.Delay(settings.DelayOnError, cancellationToken).SilentlyContinue().ConfigureAwait(false);
+                    await DelayOnError().ConfigureAwait(false);
                 }
             }
 
@@ -93,7 +95,7 @@ namespace Vostok.Hercules.Consumers
             log.Info("Final coordinates: {StreamCoordinates}.", coordinates);
         }
 
-        private async Task Restart()
+        private async Task<bool> Restart()
         {
             using (new OperationContextToken("Restart"))
             {
@@ -106,22 +108,33 @@ namespace Vostok.Hercules.Consumers
 
                 log.Info("Current coordinates: {StreamCoordinates}.", coordinates);
 
-                var endCoordinates = await SeekToEndAsync().ConfigureAwait(false);
+                var end = await SeekToEndAsync().ConfigureAwait(false);
+                if (!end.IsSuccessful)
+                {
+                    log.Warn(
+                        "Failed to get end coordinates. Status: {Status}. Error: '{Error}'.",
+                        end.Status,
+                        end.ErrorDetails);
+                    await DelayOnError().ConfigureAwait(false);
+                    return false;
+                }
+
+                var endCoordinates = end.Payload.Next;
                 log.Info("End coordinates: {StreamCoordinates}.", endCoordinates);
 
                 var storageCoordinates = await settings.CoordinatesStorage.GetCurrentAsync().ConfigureAwait(false);
                 log.Info("Storage coordinates: {StreamCoordinates}.", storageCoordinates);
 
-                // Note(kungurtsev): some coordinates are missing.
                 if (endCoordinates.Positions.Any(p => storageCoordinates.Positions.All(pp => pp.Partition != p.Partition)))
                 {
-                    log.Info("Returning end coordinates: {StreamCoordinates}.", endCoordinates);
+                    log.Info("Some coordinates are missing. Returning end coordinates: {StreamCoordinates}.", endCoordinates);
                     coordinates = endCoordinates;
-                    return;
+                    return true;
                 }
 
                 log.Info("Returning storage coordinates: {StreamCoordinates}.", storageCoordinates);
                 coordinates = storageCoordinates;
+                return true;
             }
         }
 
@@ -219,7 +232,7 @@ namespace Vostok.Hercules.Consumers
                             settings.StreamName,
                             readResult.Status,
                             readResult.ErrorDetails);
-                        await Task.Delay(settings.DelayOnError).SilentlyContinue().ConfigureAwait(false);
+                        await DelayOnError().ConfigureAwait(false);
                     }
                 } while (!readResult.IsSuccessful);
 
@@ -234,7 +247,31 @@ namespace Vostok.Hercules.Consumers
             }
         }
 
-        private async Task<StreamCoordinates> SeekToEndAsync()
+        private double? CountStreamRemainingEvents()
+        {
+            var end = SeekToEndAsync().GetAwaiter().GetResult();
+            if (!end.IsSuccessful)
+            {
+                log.Warn(
+                    "Failed to count remaining events. Status: {Status}. Error: '{Error}'.",
+                    end.Status,
+                    end.ErrorDetails);
+                return null;
+            }
+
+            var endCoordinates = end.Payload.Next;
+            var distance = StreamCoordinatesMerger.Distance(coordinates, endCoordinates);
+
+            log.Info(
+                "Consumer progress: events remaining: {EventsRemaining}. Current coordinates: {CurrentCoordinates}, end coordinates: {EndCoordinates}.",
+                distance,
+                coordinates,
+                endCoordinates);
+
+            return distance;
+        }
+
+        private async Task<SeekToEndStreamResult> SeekToEndAsync()
         {
             var seekToEndQuery = new SeekToEndStreamQuery(settings.StreamName)
             {
@@ -243,7 +280,12 @@ namespace Vostok.Hercules.Consumers
             };
 
             var end = await client.SeekToEndAsync(seekToEndQuery, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
-            return end.Payload.Next;
+            return end;
+        }
+
+        private async Task DelayOnError()
+        {
+            await Task.Delay(settings.DelayOnError).SilentlyContinue().ConfigureAwait(false);
         }
 
         private void LogProgress(int eventsIn)
@@ -251,29 +293,6 @@ namespace Vostok.Hercules.Consumers
             log.Info("Consumer progress: events in: {EventsIn}.", eventsIn);
             eventsMetric?.For("in").Add(eventsIn);
             iterationMetric?.For("in").Report(eventsIn);
-        }
-
-        private double? CountStreamRemainingEvents()
-        {
-            try
-            {
-                var endCoordinates = SeekToEndAsync().GetAwaiter().GetResult();
-
-                var distance = StreamCoordinatesMerger.Distance(coordinates, endCoordinates);
-
-                log.Info(
-                    "Consumer progress: events remaining: {EventsRemaining}. Current coordinates: {CurrentCoordinates}, end coordinates: {EndCoordinates}.",
-                    distance,
-                    coordinates,
-                    endCoordinates);
-
-                return distance;
-            }
-            catch (Exception e)
-            {
-                log.Warn(e, "Failed to count remaining events.");
-                return null;
-            }
         }
     }
 }
