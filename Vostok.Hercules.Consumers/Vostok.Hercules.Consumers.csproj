@@ -2,6 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\vostok.devtools\library-common-props\Main-Project.props" />
   <Import Project="..\..\vostok.devtools\git-commit-to-assembly-title\Vostok.Tools.GitCommit2AssemblyTitle.props" />
+  <Import Project="..\..\vostok.hercules.client\HerculesInternals.props" />
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Configurations>Debug;Release</Configurations>
@@ -56,88 +57,4 @@
       <HintPath>..\..\vostok.logging.context\Vostok.Logging.Context\bin\Release\netstandard2.0\Vostok.Logging.Context.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="..\..\vostok.commons.binary\Vostok.Commons.Binary\BinaryBufferReader.cs" Link="Commons\BinaryBufferReader.cs" />
-    <Compile Include="..\..\vostok.commons.binary\Vostok.Commons.Binary\BinaryBufferWriter.cs" Link="Commons\BinaryBufferWriter.cs" />
-    <Compile Include="..\..\vostok.commons.binary\Vostok.Commons.Binary\Endianness.cs" Link="Commons\Endianness.cs" />
-    <Compile Include="..\..\vostok.commons.binary\Vostok.Commons.Binary\EndiannessConverter.cs" Link="Commons\EndiannessConverter.cs" />
-    <Compile Include="..\..\vostok.commons.binary\Vostok.Commons.Binary\IBinaryReader.cs" Link="Commons\IBinaryReader.cs" />
-    <Compile Include="..\..\vostok.commons.binary\Vostok.Commons.Binary\IBinaryReaderExtensions.cs" Link="Commons\IBinaryReaderExtensions.cs" />
-    <Compile Include="..\..\vostok.commons.binary\Vostok.Commons.Binary\IBinaryWriter.cs" Link="Commons\IBinaryWriter.cs" />
-    <Compile Include="..\..\vostok.commons.binary\Vostok.Commons.Binary\IBinaryWriterExtensions.cs" Link="Commons\IBinaryWriterExtensions.cs" />
-    <Compile Include="..\..\vostok.commons.collections\Vostok.Commons.Collections\BufferPool.cs" Link="Commons\BufferPool.cs" />
-    <Compile Include="..\..\vostok.commons.helpers\Vostok.Commons.Helpers\Disposable\ActionDisposable.cs" Link="Commons\ActionDisposable.cs" />
-    <Compile Include="..\..\vostok.commons.helpers\Vostok.Commons.Helpers\Disposable\EmptyDisposable.cs" Link="Commons\EmptyDisposable.cs" />
-    <Compile Include="..\..\vostok.commons.helpers\Vostok.Commons.Helpers\Disposable\ValueDisposable.cs" Link="Commons\ValueDisposable.cs" />
-    <Compile Include="..\..\vostok.commons.helpers\Vostok.Commons.Helpers\Extensions\TaskExtensions.cs" Link="Commons\TaskExtensions.cs" />
-    <Compile Include="..\..\vostok.commons.time\Vostok.Commons.Time\EpochHelper.cs" Link="Commons\EpochHelper.cs" />
-    <Compile Include="..\..\vostok.commons.time\Vostok.Commons.Time\TimeSpanConversions.cs" Link="Commons\TimeSpanConversions.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Client\ClusterClientFactory.cs" Link="HerculesInternal\ClusterClientFactory.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Client\IResponseAnalyzer.cs" Link="HerculesInternal\IResponseAnalyzer.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Client\ResponseAnalysisContext.cs" Link="HerculesInternal\ResponseAnalysisContext.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Client\ResponseAnalyzer.cs" Link="HerculesInternal\ResponseAnalyzer.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Constants.cs" Link="HerculesInternal\Constants.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Internal\GateRequestSender.cs" Link="HerculesInternal\GateRequestSender.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Internal\IGateRequestSender.cs" Link="HerculesInternal\IGateRequestSender.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Internal\Lz4Helper.cs" Link="HerculesInternal\Lz4Helper.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Internal\RawReadStreamPayload.cs" Link="HerculesInternal\RawReadStreamPayload.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Internal\RawReadStreamResult.cs" Link="HerculesInternal\RawReadStreamResult.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Internal\StreamApiRequestSender.cs" Link="HerculesInternal\StreamApiRequestSender.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Serialization\Builders\BinaryCountingTagsBuilder.cs" Link="HerculesInternal\Binary\BinaryCountingTagsBuilder.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Serialization\Builders\BinaryEventBuilder.cs" Link="HerculesInternal\Binary\BinaryEventBuilder.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Serialization\Builders\BinaryTagsBuilder.cs" Link="HerculesInternal\Binary\BinaryTagsBuilder.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Serialization\Builders\TagType.cs" Link="HerculesInternal\Binary\TagType.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Serialization\Helpers\BinaryWriterExtensions.cs" Link="HerculesInternal\Binary\BinaryWriterExtensions.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Serialization\Readers\BinaryBufferReader.cs" Link="HerculesInternal\Binary\BinaryBufferReader.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Serialization\Readers\DummyEventBuilder.cs" Link="HerculesInternal\Binary\DummyEventBuilder.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Serialization\Readers\EventsBinaryReader.cs" Link="HerculesInternal\Binary\EventsBinaryReader.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Serialization\Readers\HerculesEventBuilderGeneric.cs" Link="HerculesInternal\Binary\HerculesEventBuilderGeneric.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Serialization\Readers\StreamCoordinatesReader.cs" Link="HerculesInternal\Binary\StreamCoordinatesReader.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Serialization\Readers\TimelineCoordinatesReader.cs" Link="HerculesInternal\Binary\TimelineCoordinatesReader.cs" />
-    <Compile Include="..\..\vostok.hercules.client\Vostok.Hercules.Client\Serialization\Writers\StreamCoordinatesWriter.cs" Link="HerculesInternal\Binary\StreamCoordinatesWriter.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="HerculesInternal\Binary\" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Kontur.Lz4" Version="0.1.8" PrivateAssets="all" />
-    <PackageReference Update="@(PackageReference)">
-      <PrivateAssets>All</PrivateAssets>
-      <Publish Condition=" '%(PackageReference.Publish)' != 'false' ">true</Publish>
-    </PackageReference>
-  </ItemGroup>
-  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
-    <ILRepackExecutable>"$(MSBuildThisFileDirectory)..\..\vostok.devtools.ilrepack.bin\net40\ILRepack.exe"</ILRepackExecutable>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
-    <ILRepackExecutable>dotnet "$(MSBuildThisFileDirectory)../../vostok.devtools.ilrepack.bin/netcoreapp2.1/ILRepack.Core.dll"</ILRepackExecutable>
-  </PropertyGroup>
-  <Target Name="RestorePackageReferences" BeforeTargets="Build">
-    <ItemGroup>
-      <PackageReference Remove="Kontur.Lz4" />
-      <PackageReference Include="Kontur.Lz4" Version="0.1.8" />
-    </ItemGroup>
-  </Target>
-  <Target Name="SetupILRepackProperties" AfterTargets="Build">
-    <PropertyGroup>
-      <PubDirWithoutSlash>$(ProjectDir)bin\Publish\$(TargetFramework)\publish</PubDirWithoutSlash>
-      <PubDir>$(PubDirWithoutSlash)\</PubDir>
-    </PropertyGroup>
-  </Target>
-  <Target Name="CleanPublishDir" AfterTargets="SetupILRepackProperties" Condition="'$(Configuration)' != 'Publish'">
-    <ItemGroup>
-      <OldPubDirFiles Include="$(PubDir)**/*" />
-    </ItemGroup>
-    <Delete Files="@(OldPubDirFiles)" />
-  </Target>
-  <Target Name="Publishing" AfterTargets="CleanPublishDir" Condition="'$(Configuration)' != 'Publish'">
-    <Exec WorkingDirectory="$(ProjectDir)" Command="dotnet publish -c Publish -f $(TargetFramework)" />
-  </Target>
-  <Target Name="RepackAssemblies" AfterTargets="Publishing" Condition="'$(Configuration)' != 'Publish'">
-    <ItemGroup>
-      <MergeAssemblies Include="$(ProjectDir)$(OutputPath)$(AssemblyName).dll" />
-      <MergeAssemblies Include="$(PubDir)Kontur.Lz4.dll" />
-    </ItemGroup>
-    <Exec WorkingDirectory="$(PubDir)" Command="$(ILRepackExecutable) /internalize /renameInternalized /log:ilrepack.log /lib:&quot;$(PubDirWithoutSlash)&quot; /out:$(ProjectDir)$(OutputPath)$(AssemblyName).dll @(MergeAssemblies->'%(RelativeDir)%(FileName)%(Extension)', ' ')" />
-  </Target>
 </Project>
