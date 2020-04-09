@@ -16,7 +16,6 @@ namespace Vostok.Hercules.Consumers.Helpers
         public Windows(WindowedStreamConsumerSettings<T, TKey> settings)
         {
             this.settings = settings;
-
             LastEventAdded = DateTimeOffset.UtcNow;
         }
 

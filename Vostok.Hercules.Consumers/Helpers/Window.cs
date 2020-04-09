@@ -43,10 +43,8 @@ namespace Vostok.Hercules.Consumers.Helpers
             return true;
         }
 
-        public bool ShouldBeClosedBefore(DateTimeOffset timestamp)
-        {
-            return End + lag <= timestamp;
-        }
+        public bool ShouldBeClosedBefore(DateTimeOffset timestamp) =>
+            End + lag <= timestamp;
 
         public bool ExistsForTooLong(bool restartPhase = false)
         {

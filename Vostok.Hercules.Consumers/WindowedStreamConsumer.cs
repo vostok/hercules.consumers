@@ -49,6 +49,7 @@ namespace Vostok.Hercules.Consumers
 
             var bufferPool = new BufferPool(settings.MaxPooledBufferSize, settings.MaxPooledBuffersPerBucket);
             client = new StreamApiRequestSender(settings.StreamApiCluster, log, bufferPool, settings.StreamApiClientAdditionalSetup);
+            windows = new Dictionary<TKey, Windows<T, TKey>>();
 
             eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig { ResetOnScrape = true });
             stateMetric = settings.MetricContext?.CreateIntegerGauge("state", "type");
@@ -88,7 +89,7 @@ namespace Vostok.Hercules.Consumers
                     if (cancellationToken.IsCancellationRequested)
                         return;
 
-                    log.Error(error, "Failed to consume batch.");
+                    log.Error(error, "Failed to consume stream.");
 
                     await DelayOnError().ConfigureAwait(false);
                 }
@@ -133,10 +134,10 @@ namespace Vostok.Hercules.Consumers
             log.Info("End coordinates: {StreamCoordinates}.", endCoordinates);
 
             var leftStorageCoordinates = await settings.LeftCoordinatesStorage.GetCurrentAsync().ConfigureAwait(false);
-            var rigthStorageCoordinates = await settings.RightCoordinatesStorage.GetCurrentAsync().ConfigureAwait(false);
-            LogCoordinates("Storage", leftStorageCoordinates, rigthStorageCoordinates);
+            var rightStorageCoordinates = await settings.RightCoordinatesStorage.GetCurrentAsync().ConfigureAwait(false);
+            LogCoordinates("Storage", leftStorageCoordinates, rightStorageCoordinates);
 
-            if (endCoordinates.Positions.Any(p => rigthStorageCoordinates.Positions.All(pp => pp.Partition != p.Partition)))
+            if (endCoordinates.Positions.Any(p => rightStorageCoordinates.Positions.All(pp => pp.Partition != p.Partition)))
             {
                 leftCoordinates = rightCoordinates = endCoordinates;
                 LogCoordinates("Some coordinates are missing. Returning end", leftCoordinates, rightCoordinates);
@@ -144,7 +145,7 @@ namespace Vostok.Hercules.Consumers
             }
 
             leftCoordinates = leftStorageCoordinates;
-            rightCoordinates = rigthStorageCoordinates;
+            rightCoordinates = rightStorageCoordinates;
             LogCoordinates("Returning storage", leftCoordinates, rightCoordinates);
             return true;
         }
@@ -250,9 +251,7 @@ namespace Vostok.Hercules.Consumers
             }
 
             foreach (var s in stale)
-            {
                 windows.Remove(s);
-            }
 
             leftCoordinates = result.EventsCount == 0 ? rightCoordinates : result.FirstEventCoordinates;
 
