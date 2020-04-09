@@ -2,30 +2,36 @@
 using JetBrains.Annotations;
 using Vostok.Clusterclient.Core;
 using Vostok.Clusterclient.Core.Topology;
+using Vostok.Commons.Time;
 using Vostok.Hercules.Client.Abstractions.Events;
-using Vostok.Hercules.Client.Abstractions.Models;
 using Vostok.Metrics;
 
 namespace Vostok.Hercules.Consumers
 {
     [PublicAPI]
-    public class WindowedStreamConsumerSettings<T>
+    public class WindowedStreamConsumerSettings<T, TKey>
     {
         public WindowedStreamConsumerSettings(
             [NotNull] string streamName,
             [NotNull] Func<string> apiKeyProvider,
             [NotNull] IClusterProvider streamApiCluster,
-            [NotNull] Action<T> onEvent,
+            [NotNull] Func<T, TKey> keyProvider,
+            [NotNull] Func<T, DateTimeOffset> timestampProvider,
+            [NotNull] Func<IWindow> createWindow,
             [NotNull] Func<IBinaryBufferReader, IHerculesEventBuilder<T>> eventBuilderProvider,
-            [NotNull] IStreamCoordinatesStorage coordinatesStorage,
+            [NotNull] IStreamCoordinatesStorage leftCoordinatesStorage,
+            [NotNull] IStreamCoordinatesStorage rightCoordinatesStorage,
             [NotNull] Func<StreamShardingSettings> shardingSettingsProvider)
         {
             StreamName = streamName ?? throw new ArgumentNullException(nameof(streamName));
             ApiKeyProvider = apiKeyProvider ?? throw new ArgumentNullException(nameof(apiKeyProvider));
             StreamApiCluster = streamApiCluster ?? throw new ArgumentNullException(nameof(streamApiCluster));
-            OnEvent = onEvent ?? throw new ArgumentNullException(nameof(onEvent));
+            KeyProvider = keyProvider ?? throw new ArgumentNullException(nameof(keyProvider));
+            TimestampProvider = timestampProvider ?? throw new ArgumentNullException(nameof(timestampProvider));
+            CreateWindow = createWindow ?? throw new ArgumentNullException(nameof(createWindow));
             EventBuilderProvider = eventBuilderProvider ?? throw new ArgumentNullException(nameof(eventBuilderProvider));
-            CoordinatesStorage = coordinatesStorage ?? throw new ArgumentNullException(nameof(coordinatesStorage));
+            LeftCoordinatesStorage = leftCoordinatesStorage ?? throw new ArgumentNullException(nameof(leftCoordinatesStorage));
+            RightCoordinatesStorage = rightCoordinatesStorage ?? throw new ArgumentNullException(nameof(rightCoordinatesStorage));
             ShardingSettingsProvider = shardingSettingsProvider ?? throw new ArgumentNullException(nameof(shardingSettingsProvider));
         }
 
@@ -39,19 +45,22 @@ namespace Vostok.Hercules.Consumers
         public IClusterProvider StreamApiCluster { get; }
 
         [NotNull]
-        public Action<T> OnEvent { get; }
+        public Func<T, TKey> KeyProvider { get; }
 
-        [CanBeNull]
-        public Action<StreamCoordinates> OnBatchBegin { get; set; }
+        [NotNull]
+        public Func<T, DateTimeOffset> TimestampProvider { get; }
 
-        [CanBeNull]
-        public Action<StreamCoordinates> OnBatchEnd { get; set; }
+        [NotNull]
+        public Func<IWindow> CreateWindow { get; }
 
         [NotNull]
         public Func<IBinaryBufferReader, IHerculesEventBuilder<T>> EventBuilderProvider { get; }
 
         [NotNull]
-        public IStreamCoordinatesStorage CoordinatesStorage { get; }
+        public IStreamCoordinatesStorage LeftCoordinatesStorage { get; }
+
+        [NotNull]
+        public IStreamCoordinatesStorage RightCoordinatesStorage { get; }
 
         [NotNull]
         public Func<StreamShardingSettings> ShardingSettingsProvider { get; }
@@ -73,5 +82,22 @@ namespace Vostok.Hercules.Consumers
         public int MaxPooledBufferSize { get; set; } = ConsumersConstants.MaxPooledBufferSize;
 
         public int MaxPooledBuffersPerBucket { get; set; } = ConsumersConstants.MaxPooledBuffersPerBucket;
+
+        public TimeSpan DefaultPeriod { get; set; } = 1.Minutes();
+
+        public TimeSpan DefaultLag { get; set; } = 30.Seconds();
+
+        public TimeSpan MaximumEventBeforeNow { get; set; } = 1.Days();
+
+        public TimeSpan MaximumEventAfterNow { get; set; } = 1.Minutes();
+
+        public TimeSpan WindowsTtl { get; set; } = 1.Hours();
+
+        public interface IWindow
+        {
+            void Add([NotNull] T @event);
+
+            void Flush(DateTimeOffset timestamp);
+        }
     }
 }

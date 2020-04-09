@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,15 +23,18 @@ using BinaryBufferReader = Vostok.Hercules.Client.Serialization.Readers.BinaryBu
 namespace Vostok.Hercules.Consumers
 {
     [PublicAPI]
-    public class WindowedStreamConsumer<T>
+    public class WindowedStreamConsumer<T, TKey>
     {
-        private readonly BatchesStreamConsumerSettings<T> settings;
+        private readonly WindowedStreamConsumerSettings<T, TKey> settings;
         private readonly ILog log;
         private readonly IMetricGroup1<IIntegerGauge> eventsMetric;
+        private readonly IMetricGroup1<IIntegerGauge> stateMetric;
         private readonly IMetricGroup1<ITimer> iterationMetric;
         private readonly StreamApiRequestSender client;
+        private readonly Dictionary<TKey, Windows<T, TKey>> windows;
 
-        private StreamCoordinates coordinates;
+        private volatile StreamCoordinates leftCoordinates;
+        private volatile StreamCoordinates rightCoordinates;
         private StreamShardingSettings shardingSettings;
 
         private volatile int iteration;
@@ -38,15 +42,16 @@ namespace Vostok.Hercules.Consumers
         private volatile Task<(StreamCoordinates query, RawReadStreamPayload result)> readTask;
         private volatile Task saveCoordinatesTask;
 
-        public WindowedStreamConsumer([NotNull] BatchesStreamConsumerSettings<T> settings, [CanBeNull] ILog log)
+        public WindowedStreamConsumer([NotNull] WindowedStreamConsumerSettings<T, TKey> settings, [CanBeNull] ILog log)
         {
             this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            this.log = log = (log ?? LogProvider.Get()).ForContext<BatchesStreamConsumer<T>>();
+            this.log = log = (log ?? LogProvider.Get()).ForContext<WindowedStreamConsumer<T, TKey>>();
 
             var bufferPool = new BufferPool(settings.MaxPooledBufferSize, settings.MaxPooledBuffersPerBucket);
             client = new StreamApiRequestSender(settings.StreamApiCluster, log, bufferPool, settings.StreamApiClientAdditionalSetup);
 
             eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig { ResetOnScrape = true });
+            stateMetric = settings.MetricContext?.CreateIntegerGauge("state", "type");
             iterationMetric = settings.MetricContext?.CreateSummary("iteration", "type", new SummaryConfig { Quantiles = new[] { 0.5, 0.75, 1 } });
             settings.MetricContext?.CreateFuncGauge("events", "type").For("remaining").SetValueProvider(() => CountStreamRemainingEvents());
             settings.MetricContext?.CreateFuncGauge("buffer", "type").For("rented_reader").SetValueProvider(() => BufferPool.Rented);
@@ -90,7 +95,7 @@ namespace Vostok.Hercules.Consumers
             }
 
             await (saveCoordinatesTask ?? Task.CompletedTask).ConfigureAwait(false);
-            log.Info("Final coordinates: {StreamCoordinates}.", coordinates);
+            LogCoordinates("Final", leftCoordinates, rightCoordinates);
         }
 
         private async Task<bool> Restart()
@@ -99,41 +104,58 @@ namespace Vostok.Hercules.Consumers
             {
                 readTask = null;
 
-                log.Info(
-                    "Current sharding settings: shard with index {ShardIndex} from {ShardCount}.",
-                    shardingSettings.ClientShardIndex,
-                    shardingSettings.ClientShardCount);
-
-                log.Info("Current coordinates: {StreamCoordinates}.", coordinates);
-
-                var end = await SeekToEndAsync().ConfigureAwait(false);
-                if (!end.IsSuccessful)
-                {
-                    log.Warn(
-                        "Failed to get end coordinates. Status: {Status}. Error: '{Error}'.",
-                        end.Status,
-                        end.ErrorDetails);
-                    await DelayOnError().ConfigureAwait(false);
+                if (!await RestartCoordinates().ConfigureAwait(false))
                     return false;
-                }
 
-                var endCoordinates = end.Payload.Next;
-                log.Info("End coordinates: {StreamCoordinates}.", endCoordinates);
+                await RestartWindows().ConfigureAwait(false);
 
-                var storageCoordinates = await settings.CoordinatesStorage.GetCurrentAsync().ConfigureAwait(false);
-                log.Info("Storage coordinates: {StreamCoordinates}.", storageCoordinates);
-
-                if (endCoordinates.Positions.Any(p => storageCoordinates.Positions.All(pp => pp.Partition != p.Partition)))
-                {
-                    log.Info("Some coordinates are missing. Returning end coordinates: {StreamCoordinates}.", endCoordinates);
-                    coordinates = endCoordinates;
-                    return true;
-                }
-
-                log.Info("Returning storage coordinates: {StreamCoordinates}.", storageCoordinates);
-                coordinates = storageCoordinates;
                 return true;
             }
+        }
+
+        private async Task<bool> RestartCoordinates()
+        {
+            LogShardingSettings();
+            LogCoordinates("Current", leftCoordinates, rightCoordinates);
+
+            var end = await SeekToEndAsync().ConfigureAwait(false);
+            if (!end.IsSuccessful)
+            {
+                log.Warn(
+                    "Failed to get end coordinates. Status: {Status}. Error: '{Error}'.",
+                    end.Status,
+                    end.ErrorDetails);
+                await DelayOnError().ConfigureAwait(false);
+                return false;
+            }
+
+            var endCoordinates = end.Payload.Next;
+            log.Info("End coordinates: {StreamCoordinates}.", endCoordinates);
+
+            var leftStorageCoordinates = await settings.LeftCoordinatesStorage.GetCurrentAsync().ConfigureAwait(false);
+            var rigthStorageCoordinates = await settings.RightCoordinatesStorage.GetCurrentAsync().ConfigureAwait(false);
+            LogCoordinates("Storage", leftStorageCoordinates, rigthStorageCoordinates);
+
+            if (endCoordinates.Positions.Any(p => rigthStorageCoordinates.Positions.All(pp => pp.Partition != p.Partition)))
+            {
+                leftCoordinates = rightCoordinates = endCoordinates;
+                LogCoordinates("Some coordinates are missing. Returning end", leftCoordinates, rightCoordinates);
+                return true;
+            }
+
+            leftCoordinates = leftStorageCoordinates;
+            rightCoordinates = rigthStorageCoordinates;
+            LogCoordinates("Returning storage", leftCoordinates, rightCoordinates);
+            return true;
+        }
+
+        private Task RestartWindows()
+        {
+            windows.Clear();
+
+            // TODO(kungurtsev): read events from left to right.
+
+            return Task.CompletedTask;
         }
 
         private async Task MakeIteration()
@@ -142,16 +164,14 @@ namespace Vostok.Hercules.Consumers
 
             try
             {
-                settings.OnBatchBegin?.Invoke(queryCoordinates);
-
-                coordinates = result.Next;
+                rightCoordinates = result.Next;
                 readTask = ReadAsync();
 
-                HandleEvents(result);
+                HandleEvents(queryCoordinates, result);
 
-                settings.OnBatchEnd?.Invoke(coordinates);
-
-                saveCoordinatesTask = settings.CoordinatesStorage.AdvanceAsync(coordinates);
+                saveCoordinatesTask = Task.WhenAll(
+                    settings.LeftCoordinatesStorage.AdvanceAsync(leftCoordinates),
+                    settings.RightCoordinatesStorage.AdvanceAsync(rightCoordinates));
             }
             finally
             {
@@ -159,42 +179,91 @@ namespace Vostok.Hercules.Consumers
             }
         }
 
-        private void HandleEvents(RawReadStreamPayload result)
+        private void HandleEvents(StreamCoordinates queryCoordinates, RawReadStreamPayload result)
         {
             using (new OperationContextToken("HandleEvents"))
             using (iterationMetric?.For("handle_time").Measure())
             {
-                // ReSharper disable once AssignNullToNotNullAttribute
-                var reader = new BinaryBufferReader(result.Content.Array, result.Content.Offset)
-                {
-                    Endianness = Endianness.Big
-                };
-
-                var count = reader.ReadInt32();
-
-                for (var i = 0; i < count; i++)
-                {
-                    var startPosition = reader.Position;
-
-                    try
-                    {
-                        var @event = EventsBinaryReader.ReadEvent(reader, settings.EventBuilderProvider(reader));
-                        settings.OnEvent(@event);
-                    }
-                    catch (Exception e)
-                    {
-                        log.Error(e, "Failed to read event from position {Position}.", startPosition);
-
-                        reader.Position = startPosition;
-                        EventsBinaryReader.ReadEvent(reader, DummyEventBuilder.Instance);
-                    }
-                }
-
-                LogProgress(count);
-
-                if (count == 0)
-                    Thread.Sleep(settings.DelayOnNoEvents);
+                FillWindows(queryCoordinates, result);
+                FlushWindows();
             }
+        }
+
+        private void FillWindows(StreamCoordinates queryCoordinates, RawReadStreamPayload result)
+        {
+            // ReSharper disable once AssignNullToNotNullAttribute
+            var reader = new BinaryBufferReader(result.Content.Array, result.Content.Offset)
+            {
+                Endianness = Endianness.Big
+            };
+
+            var count = reader.ReadInt32();
+
+            for (var i = 0; i < count; i++)
+            {
+                var startPosition = reader.Position;
+
+                try
+                {
+                    var @event = EventsBinaryReader.ReadEvent(reader, settings.EventBuilderProvider(reader));
+                    AddEvent(@event, queryCoordinates);
+                }
+                catch (Exception e)
+                {
+                    log.Error(e, "Failed to read event from position {Position}.", startPosition);
+
+                    reader.Position = startPosition;
+                    EventsBinaryReader.ReadEvent(reader, DummyEventBuilder.Instance);
+                }
+            }
+
+            log.Info("Consumer progress: events in: {EventsIn}.", count);
+            eventsMetric?.For("in").Add(count);
+            iterationMetric?.For("in").Report(count);
+
+            if (count == 0)
+                Thread.Sleep(settings.DelayOnNoEvents);
+        }
+
+        private void AddEvent(T @event, StreamCoordinates queryCoordinates)
+        {
+            var key = settings.KeyProvider(@event);
+            if (!windows.ContainsKey(key))
+                windows[key] = new Windows<T, TKey>(settings);
+            if (!windows[key].AddEvent(@event, queryCoordinates))
+                eventsMetric?.For("dropped").Increment();
+        }
+
+        private void FlushWindows()
+        {
+            var result = new WindowsFlushResult();
+            var stale = new List<TKey>();
+
+            foreach (var pair in windows)
+            {
+                var flushResult = pair.Value.Flush();
+                result.MergeWith(flushResult);
+
+                if (flushResult.EventsCount == 0
+                    && DateTimeOffset.UtcNow - pair.Value.LastEventAdded > settings.WindowsTtl)
+                    stale.Add(pair.Key);
+            }
+
+            foreach (var s in stale)
+            {
+                windows.Remove(s);
+            }
+
+            leftCoordinates = result.EventsCount == 0 ? rightCoordinates : result.FirstEventCoordinates;
+
+            log.Info(
+                "Consumer status: keys: {KeysCount}, windows: {WindowsCount}, events: {EventsCount}.",
+                windows.Count,
+                result.WindowsCount,
+                result.EventsCount);
+            stateMetric?.For("keys").Set(windows.Count);
+            stateMetric?.For("windows").Set(result.WindowsCount);
+            stateMetric?.For("events").Set(result.EventsCount);
         }
 
         private async Task<(StreamCoordinates query, RawReadStreamPayload result)> ReadAsync()
@@ -202,16 +271,12 @@ namespace Vostok.Hercules.Consumers
             using (new OperationContextToken("ReadEvents"))
             using (iterationMetric?.For("read_time").Measure())
             {
-                log.Info(
-                    "Reading logical shard with index {ClientShard} from {ClientShardCount}.",
-                    shardingSettings.ClientShardIndex,
-                    shardingSettings.ClientShardCount);
-
-                log.Debug("Current coordinates: {StreamCoordinates}.", coordinates);
+                LogShardingSettings();
+                log.Info("Current coordinates: {StreamCoordinates}.", rightCoordinates);
 
                 var eventsQuery = new ReadStreamQuery(settings.StreamName)
                 {
-                    Coordinates = coordinates,
+                    Coordinates = rightCoordinates,
                     ClientShard = shardingSettings.ClientShardIndex,
                     ClientShardCount = shardingSettings.ClientShardCount,
                     Limit = settings.EventsReadBatchSize
@@ -239,7 +304,7 @@ namespace Vostok.Hercules.Consumers
                     readResult.Payload.Content.Count,
                     settings.StreamName);
 
-                eventsQuery.Coordinates = StreamCoordinatesMerger.FixQueryCoordinates(coordinates, readResult.Payload.Next);
+                eventsQuery.Coordinates = StreamCoordinatesMerger.FixQueryCoordinates(rightCoordinates, readResult.Payload.Next);
 
                 return (eventsQuery.Coordinates, readResult.Payload);
             }
@@ -258,12 +323,12 @@ namespace Vostok.Hercules.Consumers
             }
 
             var endCoordinates = end.Payload.Next;
-            var distance = StreamCoordinatesMerger.Distance(coordinates, endCoordinates);
+            var distance = StreamCoordinatesMerger.Distance(rightCoordinates, endCoordinates);
 
             log.Info(
                 "Consumer progress: events remaining: {EventsRemaining}. Current coordinates: {CurrentCoordinates}, end coordinates: {EndCoordinates}.",
                 distance,
-                coordinates,
+                rightCoordinates,
                 endCoordinates);
 
             return distance;
@@ -281,16 +346,16 @@ namespace Vostok.Hercules.Consumers
             return end;
         }
 
-        private async Task DelayOnError()
-        {
+        private async Task DelayOnError() =>
             await Task.Delay(settings.DelayOnError).SilentlyContinue().ConfigureAwait(false);
-        }
 
-        private void LogProgress(int eventsIn)
-        {
-            log.Info("Consumer progress: events in: {EventsIn}.", eventsIn);
-            eventsMetric?.For("in").Add(eventsIn);
-            iterationMetric?.For("in").Report(eventsIn);
-        }
+        private void LogCoordinates(string message, StreamCoordinates left, StreamCoordinates right) =>
+            log.Info(message + " coordinates: left: {LeftCoordinates} right: {RightCoordinates}.", left, right);
+
+        private void LogShardingSettings() =>
+            log.Info(
+                "Current sharding settings: shard with index {ShardIndex} from {ShardCount}.",
+                shardingSettings.ClientShardIndex,
+                shardingSettings.ClientShardCount);
     }
 }
