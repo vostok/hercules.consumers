@@ -17,7 +17,7 @@ namespace Vostok.Hercules.Consumers
             [NotNull] IClusterProvider streamApiCluster,
             [NotNull] Func<T, TKey> keyProvider,
             [NotNull] Func<T, DateTimeOffset> timestampProvider,
-            [NotNull] Func<IWindow> createWindow,
+            [NotNull] Func<TKey, IWindow> createWindow,
             [NotNull] Func<IBinaryBufferReader, IHerculesEventBuilder<T>> eventBuilderProvider,
             [NotNull] IStreamCoordinatesStorage leftCoordinatesStorage,
             [NotNull] IStreamCoordinatesStorage rightCoordinatesStorage,
@@ -51,7 +51,7 @@ namespace Vostok.Hercules.Consumers
         public Func<T, DateTimeOffset> TimestampProvider { get; }
 
         [NotNull]
-        public Func<IWindow> CreateWindow { get; }
+        public Func<TKey, IWindow> CreateWindow { get; }
 
         [NotNull]
         public Func<IBinaryBufferReader, IHerculesEventBuilder<T>> EventBuilderProvider { get; }

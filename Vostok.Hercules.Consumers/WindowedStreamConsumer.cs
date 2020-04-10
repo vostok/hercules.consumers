@@ -230,7 +230,7 @@ namespace Vostok.Hercules.Consumers
         {
             var key = settings.KeyProvider(@event);
             if (!windows.ContainsKey(key))
-                windows[key] = new Windows<T, TKey>(settings);
+                windows[key] = new Windows<T, TKey>(key, settings);
             if (!windows[key].AddEvent(@event, queryCoordinates))
                 eventsMetric?.For("dropped").Increment();
         }

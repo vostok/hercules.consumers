@@ -7,14 +7,16 @@ namespace Vostok.Hercules.Consumers.Helpers
     internal class Windows<T, TKey>
     {
         public DateTimeOffset LastEventAdded;
+        private readonly TKey key;
         private readonly WindowedStreamConsumerSettings<T, TKey> settings;
 
         private readonly List<Window<T, TKey>> windows = new List<Window<T, TKey>>();
         private DateTimeOffset minimumAllowedTimestamp = DateTimeOffset.MinValue;
         private DateTimeOffset maximumObservedTimestamp = DateTimeOffset.MinValue;
 
-        public Windows(WindowedStreamConsumerSettings<T, TKey> settings)
+        public Windows(TKey key, WindowedStreamConsumerSettings<T, TKey> settings)
         {
+            this.key = key;
             this.settings = settings;
             LastEventAdded = DateTimeOffset.UtcNow;
         }
@@ -77,7 +79,7 @@ namespace Vostok.Hercules.Consumers.Helpers
             var lag = settings.DefaultLag;
 
             var start = timestamp.AddTicks(-timestamp.Ticks % period.Ticks);
-            var result = new Window<T, TKey>(settings.CreateWindow(), coordinates, start, start + period, period, lag);
+            var result = new Window<T, TKey>(settings.CreateWindow(key), coordinates, start, start + period, period, lag);
             return result;
         }
     }
