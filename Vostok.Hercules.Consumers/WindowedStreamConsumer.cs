@@ -311,6 +311,9 @@ namespace Vostok.Hercules.Consumers
 
         private double? CountStreamRemainingEvents()
         {
+            if (rightCoordinates == null)
+                return null;
+
             var end = SeekToEndAsync().GetAwaiter().GetResult();
             if (!end.IsSuccessful)
             {
