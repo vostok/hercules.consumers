@@ -83,9 +83,9 @@ namespace Vostok.Hercules.Consumers
 
         public int MaxPooledBuffersPerBucket { get; set; } = ConsumersConstants.MaxPooledBuffersPerBucket;
 
-        public TimeSpan DefaultPeriod { get; set; } = 1.Minutes();
+        public TimeSpan Period { get; set; } = 1.Minutes();
 
-        public TimeSpan DefaultLag { get; set; } = 30.Seconds();
+        public TimeSpan Lag { get; set; } = 30.Seconds();
 
         public TimeSpan MaximumDeltaBeforeNow { get; set; } = 1.Days();
 

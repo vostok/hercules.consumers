@@ -75,8 +75,8 @@ namespace Vostok.Hercules.Consumers.Helpers
         
         private Window<T, TKey> CreateWindow(DateTimeOffset timestamp, StreamCoordinates coordinates)
         {
-            var period = settings.DefaultPeriod;
-            var lag = settings.DefaultLag;
+            var period = settings.Period;
+            var lag = settings.Lag;
 
             var start = timestamp.AddTicks(-timestamp.Ticks % period.Ticks);
             var result = new Window<T, TKey>(settings.CreateWindow(key), coordinates, start, start + period, period, lag);
