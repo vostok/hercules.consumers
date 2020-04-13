@@ -26,7 +26,7 @@ namespace Vostok.Hercules.Consumers.Helpers
             var now = DateTimeOffset.Now;
             var timestamp = settings.TimestampProvider(@event);
 
-            if (!timestamp.InInterval(now - settings.MaximumEventBeforeNow, now + settings.MaximumEventAfterNow))
+            if (!timestamp.InInterval(now - settings.MaximumDeltaBeforeNow, now + settings.MaximumDeltaAfterNow))
                 return false;
             if (timestamp < minimumAllowedTimestamp)
                 return false;

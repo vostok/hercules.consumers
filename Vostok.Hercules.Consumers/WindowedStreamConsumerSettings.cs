@@ -87,9 +87,9 @@ namespace Vostok.Hercules.Consumers
 
         public TimeSpan DefaultLag { get; set; } = 30.Seconds();
 
-        public TimeSpan MaximumEventBeforeNow { get; set; } = 1.Days();
+        public TimeSpan MaximumDeltaBeforeNow { get; set; } = 1.Days();
 
-        public TimeSpan MaximumEventAfterNow { get; set; } = 1.Minutes();
+        public TimeSpan MaximumDeltaAfterNow { get; set; } = 1.Minutes();
 
         public TimeSpan WindowsTtl { get; set; } = 1.Hours();
 
