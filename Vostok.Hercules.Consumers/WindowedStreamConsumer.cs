@@ -186,6 +186,11 @@ namespace Vostok.Hercules.Consumers
             using (iterationMetric?.For("handle_time").Measure())
             {
                 FillWindows(queryCoordinates, result);
+            }
+
+            using (new OperationContextToken("WriteEvents"))
+            using (iterationMetric?.For("write_time").Measure())
+            {
                 FlushWindows();
             }
         }
