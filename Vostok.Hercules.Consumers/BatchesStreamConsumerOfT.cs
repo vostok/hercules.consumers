@@ -164,6 +164,8 @@ namespace Vostok.Hercules.Consumers
 
         private void HandleEvents(RawReadStreamPayload result)
         {
+            int count;
+
             using (new OperationContextToken("HandleEvents"))
             using (iterationMetric?.For("handle_time").Measure())
             {
@@ -173,7 +175,7 @@ namespace Vostok.Hercules.Consumers
                     Endianness = Endianness.Big
                 };
 
-                var count = reader.ReadInt32();
+                count = reader.ReadInt32();
 
                 for (var i = 0; i < count; i++)
                 {
@@ -194,10 +196,10 @@ namespace Vostok.Hercules.Consumers
                 }
 
                 LogProgress(count);
-
-                if (count == 0)
-                    Thread.Sleep(settings.DelayOnNoEvents);
             }
+
+            if (count == 0)
+                Thread.Sleep(settings.DelayOnNoEvents);
         }
 
         private async Task<(StreamCoordinates query, RawReadStreamPayload result)> ReadAsync()

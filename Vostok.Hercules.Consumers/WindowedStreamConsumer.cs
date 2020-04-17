@@ -169,6 +169,7 @@ namespace Vostok.Hercules.Consumers
                 readTask = ReadAsync();
 
                 HandleEvents(queryCoordinates, result);
+                FlushWindows();
 
                 saveCoordinatesTask = Task.WhenAll(
                     settings.LeftCoordinatesStorage.AdvanceAsync(leftCoordinates),
@@ -179,53 +180,44 @@ namespace Vostok.Hercules.Consumers
                 result.Dispose();
             }
         }
-
+        
         private void HandleEvents(StreamCoordinates queryCoordinates, RawReadStreamPayload result)
         {
+            int count;
+
             using (new OperationContextToken("HandleEvents"))
             using (iterationMetric?.For("handle_time").Measure())
             {
-                FillWindows(queryCoordinates, result);
-            }
-
-            using (new OperationContextToken("WriteEvents"))
-            using (iterationMetric?.For("write_time").Measure())
-            {
-                FlushWindows();
-            }
-        }
-
-        private void FillWindows(StreamCoordinates queryCoordinates, RawReadStreamPayload result)
-        {
-            // ReSharper disable once AssignNullToNotNullAttribute
-            var reader = new BinaryBufferReader(result.Content.Array, result.Content.Offset)
-            {
-                Endianness = Endianness.Big
-            };
-
-            var count = reader.ReadInt32();
-
-            for (var i = 0; i < count; i++)
-            {
-                var startPosition = reader.Position;
-
-                try
+                // ReSharper disable once AssignNullToNotNullAttribute
+                var reader = new BinaryBufferReader(result.Content.Array, result.Content.Offset)
                 {
-                    var @event = EventsBinaryReader.ReadEvent(reader, settings.EventBuilderProvider(reader));
-                    AddEvent(@event, queryCoordinates);
-                }
-                catch (Exception e)
+                    Endianness = Endianness.Big
+                };
+
+                count = reader.ReadInt32();
+
+                for (var i = 0; i < count; i++)
                 {
-                    log.Error(e, "Failed to read event from position {Position}.", startPosition);
+                    var startPosition = reader.Position;
 
-                    reader.Position = startPosition;
-                    EventsBinaryReader.ReadEvent(reader, DummyEventBuilder.Instance);
+                    try
+                    {
+                        var @event = EventsBinaryReader.ReadEvent(reader, settings.EventBuilderProvider(reader));
+                        AddEvent(@event, queryCoordinates);
+                    }
+                    catch (Exception e)
+                    {
+                        log.Error(e, "Failed to read event from position {Position}.", startPosition);
+
+                        reader.Position = startPosition;
+                        EventsBinaryReader.ReadEvent(reader, DummyEventBuilder.Instance);
+                    }
                 }
-            }
 
-            log.Info("Consumer progress: events in: {EventsIn}.", count);
-            eventsMetric?.For("in").Add(count);
-            iterationMetric?.For("in").Report(count);
+                log.Info("Consumer progress: events in: {EventsIn}.", count);
+                eventsMetric?.For("in").Add(count);
+                iterationMetric?.For("in").Report(count);
+            }
 
             if (count == 0)
                 Thread.Sleep(settings.DelayOnNoEvents);
@@ -242,32 +234,36 @@ namespace Vostok.Hercules.Consumers
 
         private void FlushWindows()
         {
-            var result = new WindowsFlushResult();
-            var stale = new List<TKey>();
-
-            foreach (var pair in windows)
+            using (new OperationContextToken("WriteEvents"))
+            using (iterationMetric?.For("write_time").Measure())
             {
-                var flushResult = pair.Value.Flush();
-                result.MergeWith(flushResult);
+                var result = new WindowsFlushResult();
+                var stale = new List<TKey>();
 
-                if (flushResult.EventsCount == 0
-                    && DateTimeOffset.UtcNow - pair.Value.LastEventAdded > settings.WindowsTtl)
-                    stale.Add(pair.Key);
+                foreach (var pair in windows)
+                {
+                    var flushResult = pair.Value.Flush();
+                    result.MergeWith(flushResult);
+
+                    if (flushResult.EventsCount == 0
+                        && DateTimeOffset.UtcNow - pair.Value.LastEventAdded > settings.WindowsTtl)
+                        stale.Add(pair.Key);
+                }
+
+                foreach (var s in stale)
+                    windows.Remove(s);
+
+                leftCoordinates = result.EventsCount == 0 ? rightCoordinates : result.FirstEventCoordinates;
+
+                log.Info(
+                    "Consumer status: keys: {KeysCount}, windows: {WindowsCount}, events: {EventsCount}.",
+                    windows.Count,
+                    result.WindowsCount,
+                    result.EventsCount);
+                stateMetric?.For("keys").Set(windows.Count);
+                stateMetric?.For("windows").Set(result.WindowsCount);
+                stateMetric?.For("events").Set(result.EventsCount);
             }
-
-            foreach (var s in stale)
-                windows.Remove(s);
-
-            leftCoordinates = result.EventsCount == 0 ? rightCoordinates : result.FirstEventCoordinates;
-
-            log.Info(
-                "Consumer status: keys: {KeysCount}, windows: {WindowsCount}, events: {EventsCount}.",
-                windows.Count,
-                result.WindowsCount,
-                result.EventsCount);
-            stateMetric?.For("keys").Set(windows.Count);
-            stateMetric?.For("windows").Set(result.WindowsCount);
-            stateMetric?.For("events").Set(result.EventsCount);
         }
 
         private async Task<(StreamCoordinates query, RawReadStreamPayload result)> ReadAsync()
