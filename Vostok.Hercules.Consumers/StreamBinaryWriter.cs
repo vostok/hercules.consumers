@@ -51,7 +51,7 @@ namespace Vostok.Hercules.Consumers
                         settings.ApiKeyProvider(),
                         new ValueDisposable<Content>(new Content(bytes), new EmptyDisposable()),
                         settings.EventsWriteTimeout,
-                        CancellationToken.None);
+                        CancellationToken.None).ConfigureAwait(false);
 
                     if (!result.IsSuccessful)
                     {
