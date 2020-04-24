@@ -4,6 +4,7 @@ using Vostok.Clusterclient.Core;
 using Vostok.Clusterclient.Core.Topology;
 using Vostok.Commons.Time;
 using Vostok.Hercules.Client.Abstractions.Events;
+using Vostok.Hercules.Client.Abstractions.Models;
 using Vostok.Metrics;
 
 namespace Vostok.Hercules.Consumers
@@ -64,6 +65,12 @@ namespace Vostok.Hercules.Consumers
 
         [NotNull]
         public Func<StreamShardingSettings> ShardingSettingsProvider { get; }
+
+        [CanBeNull]
+        public Action<StreamCoordinates> OnBatchBegin { get; set; }
+
+        [CanBeNull]
+        public Action<StreamCoordinates> OnBatchEnd { get; set; }
 
         [CanBeNull]
         public ClusterClientSetup StreamApiClientAdditionalSetup { get; set; }

@@ -24,6 +24,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\vostok.commons.time\Vostok.Commons.Time\PreciseDateTime.cs" Link="Commons\PreciseDateTime.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="Vostok.Hercules.Client.Abstractions">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\vostok.hercules.client.abstractions\Vostok.Hercules.Client.Abstractions\bin\Release\netstandard2.0\Vostok.Hercules.Client.Abstractions.dll</HintPath>

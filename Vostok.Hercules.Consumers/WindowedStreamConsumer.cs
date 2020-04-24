@@ -165,12 +165,16 @@ namespace Vostok.Hercules.Consumers
 
             try
             {
+                settings.OnBatchBegin?.Invoke(queryCoordinates);
+
                 rightCoordinates = result.Next;
                 readTask = ReadAsync();
 
                 HandleEvents(queryCoordinates, result);
                 FlushWindows();
 
+                settings.OnBatchEnd?.Invoke(rightCoordinates);
+                
                 saveCoordinatesTask = Task.WhenAll(
                     settings.LeftCoordinatesStorage.AdvanceAsync(leftCoordinates),
                     settings.RightCoordinatesStorage.AdvanceAsync(rightCoordinates));
@@ -234,8 +238,8 @@ namespace Vostok.Hercules.Consumers
 
         private void FlushWindows()
         {
-            using (new OperationContextToken("WriteEvents"))
-            using (iterationMetric?.For("write_time").Measure())
+            using (new OperationContextToken("FlushEvents"))
+            using (iterationMetric?.For("flush_time").Measure())
             {
                 var result = new WindowsFlushResult();
                 var stale = new List<TKey>();
