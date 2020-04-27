@@ -40,6 +40,12 @@ namespace Vostok.Hercules.Consumers
 
         public async Task WriteAsync(string streamName, ArraySegment<byte> bytes, int eventsCount)
         {
+            if (eventsCount == 0)
+            {
+                LogProgress(streamName, 0);
+                return;
+            }
+
             using (new OperationContextToken("WriteEvents"))
             using (iterationMetric?.For("write_time").Measure())
             {
@@ -65,10 +71,15 @@ namespace Vostok.Hercules.Consumers
                     }
                 } while (!result.IsSuccessful);
 
-                log.Info("Consumer progress: stream: {StreamName}, events out: {EventsOut}.", streamName, eventsCount);
-                eventsMetric?.For("out").Add(eventsCount);
-                iterationMetric?.For("out").Report(eventsCount);
+                LogProgress(streamName, eventsCount);
             }
+        }
+
+        private void LogProgress(string streamName, int eventsCount)
+        {
+            log.Info("Consumer progress: stream: {StreamName}, events out: {EventsOut}.", streamName, eventsCount);
+            eventsMetric?.For("out").Add(eventsCount);
+            iterationMetric?.For("out").Report(eventsCount);
         }
 
         private async Task DelayOnError()
