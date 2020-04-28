@@ -68,7 +68,9 @@ namespace Vostok.Hercules.Consumers.Tests.Helpers
                 {
                     new StreamPosition {Partition = 0, Offset = 1},
                     new StreamPosition {Partition = 1, Offset = 1},
-                    new StreamPosition {Partition = 2, Offset = 2}
+                    new StreamPosition {Partition = 2, Offset = 2},
+                    new StreamPosition {Partition = 3, Offset = 4},
+                    new StreamPosition {Partition = 5, Offset = 4}
                 });
 
             StreamCoordinatesMerger.MergeMin(a, b).Positions.Should().BeEquivalentTo(min.Positions);

@@ -311,7 +311,7 @@ namespace Vostok.Hercules.Consumers
                 Limit = settings.EventsReadBatchSize
             };
 
-            return await ReadAsync(eventsQuery);
+            return await ReadAsync(eventsQuery).ConfigureAwait(false);
         }
 
         private async Task<(StreamCoordinates query, RawReadStreamPayload result)> ReadAsync(ReadStreamQuery query)
