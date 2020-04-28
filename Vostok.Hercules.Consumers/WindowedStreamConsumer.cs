@@ -109,7 +109,15 @@ namespace Vostok.Hercules.Consumers
 
                 await RestartCoordinates().ConfigureAwait(false);
 
-                //await RestartWindows().ConfigureAwait(false);
+                try
+                {
+                    await RestartWindows().ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    log.Error(e, "Failed to restart windows.");
+                    windows.Clear();
+                }
 
                 return true;
             }
@@ -141,20 +149,22 @@ namespace Vostok.Hercules.Consumers
 
         private async Task RestartWindows()
         {
+            LogCoordinates("Current", leftCoordinates, rightCoordinates);
+
             windows.Clear();
 
             var partitionsCount = await GetPartitionsCount().ConfigureAwait(false);
             var coordinates = await GetShardCoordinates(leftCoordinates, shardingSettings).ConfigureAwait(false);
             log.Info("Current shard coordinates: {StreamCoordinates}.", coordinates);
 
-            foreach (var coordinate in coordinates.Positions)
+            foreach (var position in coordinates.Positions)
             {
-                var start = coordinate.Offset;
-                var end = rightCoordinates.Positions.Single(p => p.Partition == coordinate.Partition).Offset;
+                var start = position.Offset;
+                var end = rightCoordinates.Positions.Single(p => p.Partition == position.Partition).Offset;
 
                 while (start < end)
                 {
-                    start = await RestartPartition(coordinate.Partition, partitionsCount, start, end).ConfigureAwait(false);
+                    start = await RestartPartition(position.Partition, partitionsCount, start, end).ConfigureAwait(false);
                 }
             }
         }
@@ -176,16 +186,14 @@ namespace Vostok.Hercules.Consumers
                 HandleEvents(queryCoordinates, result);
 
                 foreach (var window in windows)
-                {
                     window.Value.Flush(true);
-                }
             }
             finally
             {
                 result.Dispose();
             }
 
-            return queryCoordinates.Positions.Single().Offset;
+            return result.Next.Positions.Single().Offset;
         }
 
         private async Task MakeIteration()
