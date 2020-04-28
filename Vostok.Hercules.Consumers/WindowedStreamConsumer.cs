@@ -109,7 +109,7 @@ namespace Vostok.Hercules.Consumers
 
                 await RestartCoordinates().ConfigureAwait(false);
 
-                await RestartWindows().ConfigureAwait(false);
+                //await RestartWindows().ConfigureAwait(false);
 
                 return true;
             }
@@ -190,14 +190,16 @@ namespace Vostok.Hercules.Consumers
 
         private async Task MakeIteration()
         {
+            LogCoordinates("Current", leftCoordinates, rightCoordinates);
+
             var (queryCoordinates, result) = await (readTask ?? ReadAsync()).ConfigureAwait(false);
 
             try
             {
-                settings.OnBatchBegin?.Invoke(queryCoordinates);
-
                 rightCoordinates = result.Next;
                 readTask = ReadAsync();
+
+                settings.OnBatchBegin?.Invoke(queryCoordinates);
 
                 HandleEvents(queryCoordinates, result);
                 FlushWindows();
@@ -428,7 +430,7 @@ namespace Vostok.Hercules.Consumers
             await Task.Delay(settings.DelayOnError).SilentlyContinue().ConfigureAwait(false);
 
         private void LogCoordinates(string message, StreamCoordinates left, StreamCoordinates right) =>
-            log.Info(message + " coordinates: left: {LeftCoordinates} right: {RightCoordinates}.", left, right);
+            log.Info(message + " coordinates: left: {LeftCoordinates}, right: {RightCoordinates}.", left, right);
 
         private void LogShardingSettings() =>
             log.Info(

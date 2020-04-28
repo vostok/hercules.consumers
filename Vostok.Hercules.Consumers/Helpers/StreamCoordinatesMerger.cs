@@ -37,22 +37,24 @@ namespace Vostok.Hercules.Consumers.Helpers
         public static StreamCoordinates MergeMin([NotNull] StreamCoordinates left, [NotNull] StreamCoordinates right)
         {
             var map = left.ToDictionary();
-            var result = new List<StreamPosition>();
 
             foreach (var position in right.Positions)
             {
-                if (map.TryGetValue(position.Partition, out var p))
+                if (!map.TryGetValue(position.Partition, out var currentPosition))
                 {
-                    result.Add(
-                        new StreamPosition
-                        {
-                            Offset = Math.Min(position.Offset, p.Offset),
-                            Partition = position.Partition
-                        });
+                    map[position.Partition] = position;
+                }
+                else
+                {
+                    map[position.Partition] = new StreamPosition
+                    {
+                        Partition = position.Partition,
+                        Offset = Math.Min(position.Offset, currentPosition.Offset)
+                    };
                 }
             }
 
-            return new StreamCoordinates(result.ToArray());
+            return new StreamCoordinates(map.Values.ToArray());
         }
 
         /// <summary>
