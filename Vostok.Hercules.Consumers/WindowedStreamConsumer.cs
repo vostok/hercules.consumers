@@ -20,6 +20,8 @@ using Vostok.Metrics.Primitives.Gauge;
 using Vostok.Metrics.Primitives.Timer;
 using BinaryBufferReader = Vostok.Hercules.Client.Serialization.Readers.BinaryBufferReader;
 
+// ReSharper disable ParameterHidesMember
+
 namespace Vostok.Hercules.Consumers
 {
     [PublicAPI]
@@ -51,9 +53,9 @@ namespace Vostok.Hercules.Consumers
             client = new StreamApiRequestSender(settings.StreamApiCluster, log, bufferPool, settings.StreamApiClientAdditionalSetup);
             windows = new Dictionary<TKey, Windows<T, TKey>>();
 
-            eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig { ResetOnScrape = true });
+            eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
             stateMetric = settings.MetricContext?.CreateIntegerGauge("state", "type");
-            iterationMetric = settings.MetricContext?.CreateSummary("iteration", "type", new SummaryConfig { Quantiles = new[] { 0.5, 0.75, 1 } });
+            iterationMetric = settings.MetricContext?.CreateSummary("iteration", "type", new SummaryConfig {Quantiles = new[] {0.5, 0.75, 1}});
             settings.MetricContext?.CreateFuncGauge("events", "type").For("remaining").SetValueProvider(() => CountStreamRemainingEvents());
             settings.MetricContext?.CreateFuncGauge("buffer", "type").For("rented_reader").SetValueProvider(() => BufferPool.Rented);
         }
@@ -105,8 +107,7 @@ namespace Vostok.Hercules.Consumers
             {
                 readTask = null;
 
-                if (!await RestartCoordinates().ConfigureAwait(false))
-                    return false;
+                await RestartCoordinates().ConfigureAwait(false);
 
                 await RestartWindows().ConfigureAwait(false);
 
@@ -114,49 +115,77 @@ namespace Vostok.Hercules.Consumers
             }
         }
 
-        private async Task<bool> RestartCoordinates()
+        private async Task RestartCoordinates()
         {
             LogShardingSettings();
             LogCoordinates("Current", leftCoordinates, rightCoordinates);
 
-            var end = await SeekToEndAsync().ConfigureAwait(false);
-            if (!end.IsSuccessful)
-            {
-                log.Warn(
-                    "Failed to get end coordinates. Status: {Status}. Error: '{Error}'.",
-                    end.Status,
-                    end.ErrorDetails);
-                await DelayOnError().ConfigureAwait(false);
-                return false;
-            }
-
-            var endCoordinates = end.Payload.Next;
+            var endCoordinates = await SeekToEndAsync(shardingSettings).ConfigureAwait(false);
             log.Info("End coordinates: {StreamCoordinates}.", endCoordinates);
 
             var leftStorageCoordinates = await settings.LeftCoordinatesStorage.GetCurrentAsync().ConfigureAwait(false);
             var rightStorageCoordinates = await settings.RightCoordinatesStorage.GetCurrentAsync().ConfigureAwait(false);
             LogCoordinates("Storage", leftStorageCoordinates, rightStorageCoordinates);
 
-            if (endCoordinates.Positions.Any(p => rightStorageCoordinates.Positions.All(pp => pp.Partition != p.Partition)))
+            if (endCoordinates.Positions.Any(p => leftStorageCoordinates.Positions.All(pp => pp.Partition != p.Partition)) ||
+                endCoordinates.Positions.Any(p => rightStorageCoordinates.Positions.All(pp => pp.Partition != p.Partition)))
             {
                 leftCoordinates = rightCoordinates = endCoordinates;
                 LogCoordinates("Some coordinates are missing. Returning end", leftCoordinates, rightCoordinates);
-                return true;
             }
 
             leftCoordinates = leftStorageCoordinates;
             rightCoordinates = rightStorageCoordinates;
             LogCoordinates("Returning storage", leftCoordinates, rightCoordinates);
-            return true;
         }
 
-        private Task RestartWindows()
+        private async Task RestartWindows()
         {
             windows.Clear();
 
-            // TODO(kungurtsev): read events from left to right.
+            var partitionsCount = await GetPartitionsCount().ConfigureAwait(false);
+            var coordinates = await GetShardCoordinates(leftCoordinates, shardingSettings).ConfigureAwait(false);
+            log.Info("Current shard coordinates: {StreamCoordinates}.", coordinates);
 
-            return Task.CompletedTask;
+            foreach (var coordinate in coordinates.Positions)
+            {
+                var start = coordinate.Offset;
+                var end = rightCoordinates.Positions.Single(p => p.Partition == coordinate.Partition).Offset;
+
+                while (start < end)
+                {
+                    start = await RestartPartition(coordinate.Partition, partitionsCount, start, end).ConfigureAwait(false);
+                }
+            }
+        }
+
+        private async Task<long> RestartPartition(int partition, int partitionsCount, long start, long end)
+        {
+            var query = new ReadStreamQuery(settings.StreamName)
+            {
+                Coordinates = new StreamCoordinates(new[] {new StreamPosition {Offset = start, Partition = partition}}),
+                ClientShard = partition,
+                ClientShardCount = partitionsCount,
+                Limit = (int)Math.Min(end - start, settings.EventsReadBatchSize)
+            };
+
+            var (queryCoordinates, result) = await ReadAsync(query).ConfigureAwait(false);
+
+            try
+            {
+                HandleEvents(queryCoordinates, result);
+
+                foreach (var window in windows)
+                {
+                    window.Value.Flush(true);
+                }
+            }
+            finally
+            {
+                result.Dispose();
+            }
+
+            return queryCoordinates.Positions.Single().Offset;
         }
 
         private async Task MakeIteration()
@@ -174,7 +203,7 @@ namespace Vostok.Hercules.Consumers
                 FlushWindows();
 
                 settings.OnBatchEnd?.Invoke(rightCoordinates);
-                
+
                 saveCoordinatesTask = Task.WhenAll(
                     settings.LeftCoordinatesStorage.AdvanceAsync(leftCoordinates),
                     settings.RightCoordinatesStorage.AdvanceAsync(rightCoordinates));
@@ -184,7 +213,7 @@ namespace Vostok.Hercules.Consumers
                 result.Dispose();
             }
         }
-        
+
         private void HandleEvents(StreamCoordinates queryCoordinates, RawReadStreamPayload result)
         {
             int count;
@@ -272,25 +301,37 @@ namespace Vostok.Hercules.Consumers
 
         private async Task<(StreamCoordinates query, RawReadStreamPayload result)> ReadAsync()
         {
+            var eventsQuery = new ReadStreamQuery(settings.StreamName)
+            {
+                Coordinates = rightCoordinates,
+                ClientShard = shardingSettings.ClientShardIndex,
+                ClientShardCount = shardingSettings.ClientShardCount,
+                Limit = settings.EventsReadBatchSize
+            };
+
+            return await ReadAsync(eventsQuery);
+        }
+
+        private async Task<(StreamCoordinates query, RawReadStreamPayload result)> ReadAsync(ReadStreamQuery query)
+        {
             using (new OperationContextToken("ReadEvents"))
             using (iterationMetric?.For("read_time").Measure())
             {
-                LogShardingSettings();
-                log.Info("Current coordinates: {StreamCoordinates}.", rightCoordinates);
-
-                var eventsQuery = new ReadStreamQuery(settings.StreamName)
-                {
-                    Coordinates = rightCoordinates,
-                    ClientShard = shardingSettings.ClientShardIndex,
-                    ClientShardCount = shardingSettings.ClientShardCount,
-                    Limit = settings.EventsReadBatchSize
-                };
+                log.Info(
+                    "Reading {EventsCount} events from stream '{StreamName}'. " +
+                    "Sharding settings: shard with index {ShardIndex} from {ShardCount}. " +
+                    "Coordinates: {StreamCoordinates}.",
+                    query.Limit,
+                    settings.StreamName,
+                    query.ClientShard,
+                    query.ClientShardCount,
+                    query.Coordinates);
 
                 RawReadStreamResult readResult;
 
                 do
                 {
-                    readResult = await client.ReadAsync(eventsQuery, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
+                    readResult = await client.ReadAsync(query, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
                     if (!readResult.IsSuccessful)
                     {
                         log.Warn(
@@ -308,10 +349,33 @@ namespace Vostok.Hercules.Consumers
                     readResult.Payload.Content.Count,
                     settings.StreamName);
 
-                eventsQuery.Coordinates = StreamCoordinatesMerger.FixQueryCoordinates(rightCoordinates, readResult.Payload.Next);
+                query.Coordinates = StreamCoordinatesMerger.FixQueryCoordinates(rightCoordinates, readResult.Payload.Next);
 
-                return (eventsQuery.Coordinates, readResult.Payload);
+                return (query.Coordinates, readResult.Payload);
             }
+        }
+
+        private async Task<int> GetPartitionsCount()
+        {
+            var allCoordinates = await GetShardCoordinates(StreamCoordinates.Empty, new StreamShardingSettings(0, 1)).ConfigureAwait(false);
+            return allCoordinates.Positions.Length;
+        }
+
+        private async Task<StreamCoordinates> GetShardCoordinates(
+            StreamCoordinates coordinates,
+            StreamShardingSettings shardingSettings)
+        {
+            var endCoordinates = await SeekToEndAsync(shardingSettings).ConfigureAwait(false);
+
+            var map = endCoordinates.ToDictionary();
+
+            foreach (var position in coordinates.Positions)
+            {
+                if (map.ContainsKey(position.Partition))
+                    map[position.Partition] = position;
+            }
+
+            return new StreamCoordinates(map.Values.ToArray());
         }
 
         private double? CountStreamRemainingEvents()
@@ -319,29 +383,19 @@ namespace Vostok.Hercules.Consumers
             if (rightCoordinates == null)
                 return null;
 
-            var end = SeekToEndAsync().GetAwaiter().GetResult();
-            if (!end.IsSuccessful)
-            {
-                log.Warn(
-                    "Failed to count remaining events. Status: {Status}. Error: '{Error}'.",
-                    end.Status,
-                    end.ErrorDetails);
-                return null;
-            }
-
-            var endCoordinates = end.Payload.Next;
-            var distance = StreamCoordinatesMerger.Distance(rightCoordinates, endCoordinates);
+            var end = SeekToEndAsync(shardingSettings).GetAwaiter().GetResult();
+            var distance = StreamCoordinatesMerger.Distance(rightCoordinates, end);
 
             log.Info(
                 "Consumer progress: events remaining: {EventsRemaining}. Current coordinates: {CurrentCoordinates}, end coordinates: {EndCoordinates}.",
                 distance,
                 rightCoordinates,
-                endCoordinates);
+                end);
 
             return distance;
         }
 
-        private async Task<SeekToEndStreamResult> SeekToEndAsync()
+        private async Task<StreamCoordinates> SeekToEndAsync(StreamShardingSettings shardingSettings)
         {
             var seekToEndQuery = new SeekToEndStreamQuery(settings.StreamName)
             {
@@ -349,8 +403,25 @@ namespace Vostok.Hercules.Consumers
                 ClientShardCount = shardingSettings.ClientShardCount
             };
 
-            var end = await client.SeekToEndAsync(seekToEndQuery, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
-            return end;
+            SeekToEndStreamResult result;
+
+            do
+            {
+                result = await client.SeekToEndAsync(seekToEndQuery, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
+
+                if (!result.IsSuccessful)
+                {
+                    log.Warn(
+                        "Failed to seek to end for Hercules stream '{StreamName}'. " +
+                        "Status: {Status}. Error: '{Error}'.",
+                        settings.StreamName,
+                        result.Status,
+                        result.ErrorDetails);
+                    await DelayOnError().ConfigureAwait(false);
+                }
+            } while (!result.IsSuccessful);
+
+            return result.Payload.Next;
         }
 
         private async Task DelayOnError() =>

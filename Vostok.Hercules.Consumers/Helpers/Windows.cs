@@ -59,7 +59,8 @@ namespace Vostok.Hercules.Consumers.Helpers
                 {
                     windows.RemoveAt(i--);
 
-                    window.Flush();
+                    if (!restartPhase)
+                        window.Flush();
 
                     if (minimumAllowedTimestamp < window.End)
                         minimumAllowedTimestamp = window.End;
