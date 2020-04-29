@@ -11,7 +11,7 @@ notests *default:
   deps:
     - vostok.logging.context
     - vostok.clusterclient.transport
-    - vostok.hercules.client
+    - vostok.hercules.client@lz4-again
     - vostok.clusterclient.core
     - vostok.metrics
     - vostok.devtools
