@@ -7,7 +7,6 @@ using Vostok.Hercules.Client;
 using Vostok.Hercules.Client.Abstractions.Events;
 using Vostok.Hercules.Client.Serialization.Builders;
 using Vostok.Logging.Abstractions;
-using Vostok.Logging.Context;
 
 namespace Vostok.Hercules.Consumers
 {
@@ -18,7 +17,6 @@ namespace Vostok.Hercules.Consumers
         private readonly ILog log;
         private readonly BinaryBufferWriter buffer;
         private int eventsCount;
-        private int eventsDropped;
 
         public StreamBinaryEventsWriter([NotNull] StreamBinaryEventsWriterSettings settings, [CanBeNull] ILog log)
         {
@@ -33,8 +31,8 @@ namespace Vostok.Hercules.Consumers
         {
             if (buffer.Length > settings.BufferCapacityLimit)
             {
-                eventsDropped++;
-                return;
+                log.Warn("Buffer capacity {Capacity} exceeded. Trigger write.", buffer.Length);
+                WriteAsync().GetAwaiter().GetResult();
             }
 
             eventsCount++;
@@ -47,8 +45,6 @@ namespace Vostok.Hercules.Consumers
 
         public async Task WriteAsync()
         {
-            LogDroppedEvents();
-
             using (buffer.JumpTo(0))
             {
                 buffer.Write(eventsCount);
@@ -59,18 +55,6 @@ namespace Vostok.Hercules.Consumers
             buffer.Reset();
             buffer.Write(0);
             eventsCount = 0;
-        }
-
-        private void LogDroppedEvents()
-        {
-            using (new OperationContextToken("WriteEvents"))
-            {
-                if (eventsDropped > 0)
-                {
-                    log.Error("Events dropped due to buffer overflow: {EventsCount}. Buffer capacity: {Capacity}.", eventsDropped, settings.BufferCapacityLimit);
-                    eventsDropped = 0;
-                }
-            }
         }
     }
 }
