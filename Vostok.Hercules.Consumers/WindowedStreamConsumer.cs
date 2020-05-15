@@ -140,6 +140,7 @@ namespace Vostok.Hercules.Consumers
             {
                 leftCoordinates = rightCoordinates = endCoordinates;
                 LogCoordinates("Some coordinates are missing. Returning end", leftCoordinates, rightCoordinates);
+                return;
             }
 
             leftCoordinates = leftStorageCoordinates;
