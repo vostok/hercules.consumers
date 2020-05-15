@@ -109,18 +109,7 @@ namespace Vostok.Hercules.Consumers
 
                 log.Info("Current coordinates: {StreamCoordinates}.", coordinates);
 
-                var end = await SeekToEndAsync().ConfigureAwait(false);
-                if (!end.IsSuccessful)
-                {
-                    log.Warn(
-                        "Failed to get end coordinates. Status: {Status}. Error: '{Error}'.",
-                        end.Status,
-                        end.ErrorDetails);
-                    await DelayOnError().ConfigureAwait(false);
-                    return false;
-                }
-
-                var endCoordinates = end.Payload.Next;
+                var endCoordinates = await SeekToEndAsync().ConfigureAwait(false);
                 log.Info("End coordinates: {StreamCoordinates}.", endCoordinates);
 
                 var storageCoordinates = await settings.CoordinatesStorage.GetCurrentAsync().ConfigureAwait(false);
@@ -256,28 +245,18 @@ namespace Vostok.Hercules.Consumers
                 return null;
 
             var end = SeekToEndAsync().GetAwaiter().GetResult();
-            if (!end.IsSuccessful)
-            {
-                log.Warn(
-                    "Failed to count remaining events. Status: {Status}. Error: '{Error}'.",
-                    end.Status,
-                    end.ErrorDetails);
-                return null;
-            }
-
-            var endCoordinates = end.Payload.Next;
-            var distance = StreamCoordinatesMerger.Distance(coordinates, endCoordinates);
+            var distance = StreamCoordinatesMerger.Distance(coordinates, end);
 
             log.Info(
                 "Consumer progress: events remaining: {EventsRemaining}. Current coordinates: {CurrentCoordinates}, end coordinates: {EndCoordinates}.",
                 distance,
                 coordinates,
-                endCoordinates);
+                end);
 
             return distance;
         }
 
-        private async Task<SeekToEndStreamResult> SeekToEndAsync()
+        private async Task<StreamCoordinates> SeekToEndAsync()
         {
             var seekToEndQuery = new SeekToEndStreamQuery(settings.StreamName)
             {
@@ -285,8 +264,25 @@ namespace Vostok.Hercules.Consumers
                 ClientShardCount = shardingSettings.ClientShardCount
             };
 
-            var end = await client.SeekToEndAsync(seekToEndQuery, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
-            return end;
+            SeekToEndStreamResult result;
+
+            do
+            {
+                result = await client.SeekToEndAsync(seekToEndQuery, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
+
+                if (!result.IsSuccessful)
+                {
+                    log.Warn(
+                        "Failed to seek to end for Hercules stream '{StreamName}'. " +
+                        "Status: {Status}. Error: '{Error}'.",
+                        settings.StreamName,
+                        result.Status,
+                        result.ErrorDetails);
+                    await DelayOnError().ConfigureAwait(false);
+                }
+            } while (!result.IsSuccessful);
+
+            return result.Payload.Next;
         }
 
         private async Task DelayOnError()
