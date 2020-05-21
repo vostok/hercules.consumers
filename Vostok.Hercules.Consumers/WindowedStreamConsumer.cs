@@ -177,7 +177,8 @@ namespace Vostok.Hercules.Consumers
                 Coordinates = new StreamCoordinates(new[] {new StreamPosition {Offset = start, Partition = partition}}),
                 ClientShard = partition,
                 ClientShardCount = partitionsCount,
-                Limit = (int)Math.Min(end - start, settings.EventsReadBatchSize)
+                Limit = (int)Math.Min(end - start, settings.EventsReadBatchSize),
+                FetchTimeout = settings.EventsFetchTimeout
             };
 
             var (queryCoordinates, result) = await ReadAsync(query).ConfigureAwait(false);
@@ -317,7 +318,8 @@ namespace Vostok.Hercules.Consumers
                 Coordinates = rightCoordinates,
                 ClientShard = shardingSettings.ClientShardIndex,
                 ClientShardCount = shardingSettings.ClientShardCount,
-                Limit = settings.EventsReadBatchSize
+                Limit = settings.EventsReadBatchSize,
+                FetchTimeout = settings.EventsFetchTimeout
             };
 
             return await ReadAsync(eventsQuery).ConfigureAwait(false);

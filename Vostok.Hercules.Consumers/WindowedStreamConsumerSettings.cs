@@ -82,6 +82,8 @@ namespace Vostok.Hercules.Consumers
 
         public TimeSpan EventsReadTimeout { get; set; } = ConsumersConstants.EventsReadTimeout;
 
+        public TimeSpan? EventsFetchTimeout { get; set; }
+
         public TimeSpan DelayOnError { get; set; } = ConsumersConstants.DelayOnError;
 
         public TimeSpan DelayOnNoEvents { get; set; } = ConsumersConstants.DelayOnNoEvents;
