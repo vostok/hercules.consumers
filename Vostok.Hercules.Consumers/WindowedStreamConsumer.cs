@@ -50,7 +50,7 @@ namespace Vostok.Hercules.Consumers
             this.log = log = (log ?? LogProvider.Get()).ForContext<WindowedStreamConsumer<T, TKey>>();
 
             var bufferPool = new BufferPool(settings.MaxPooledBufferSize, settings.MaxPooledBuffersPerBucket);
-            client = new StreamApiRequestSender(settings.StreamApiCluster, log, bufferPool, settings.StreamApiClientAdditionalSetup);
+            client = new StreamApiRequestSender(settings.StreamApiCluster, log.WithErrorsTransformation(), bufferPool, settings.StreamApiClientAdditionalSetup);
             windows = new Dictionary<TKey, Windows<T, TKey>>();
 
             eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
