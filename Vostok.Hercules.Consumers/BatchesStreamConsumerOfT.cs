@@ -14,6 +14,7 @@ using Vostok.Hercules.Client.Serialization.Readers;
 using Vostok.Hercules.Consumers.Helpers;
 using Vostok.Logging.Abstractions;
 using Vostok.Logging.Context;
+using Vostok.Metrics;
 using Vostok.Metrics.Grouping;
 using Vostok.Metrics.Primitives.Gauge;
 using Vostok.Metrics.Primitives.Timer;
@@ -49,10 +50,11 @@ namespace Vostok.Hercules.Consumers
             var bufferPool = new BufferPool(settings.MaxPooledBufferSize, settings.MaxPooledBuffersPerBucket);
             client = new StreamApiRequestSender(settings.StreamApiCluster, log, bufferPool, settings.StreamApiClientAdditionalSetup);
 
-            eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
-            iterationMetric = settings.MetricContext?.CreateSummary("iteration", "type", new SummaryConfig {Quantiles = new[] {0.5, 0.75, 1}});
-            settings.MetricContext?.CreateFuncGauge("events", "type").For("remaining").SetValueProvider(() => CountStreamRemainingEvents());
-            settings.MetricContext?.CreateFuncGauge("buffer", "type").For("rented_reader").SetValueProvider(() => BufferPool.Rented);
+            var metricContext = settings.MetricContext ?? new DevNullMetricContext();
+            eventsMetric = metricContext.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
+            iterationMetric = metricContext.CreateSummary("iteration", "type", new SummaryConfig {Quantiles = new[] {0.5, 0.75, 1}});
+            metricContext.CreateFuncGauge("events", "type").For("remaining").SetValueProvider(() => CountStreamRemainingEvents());
+            metricContext.CreateFuncGauge("buffer", "type").For("rented_reader").SetValueProvider(() => BufferPool.Rented);
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)
@@ -101,18 +103,14 @@ namespace Vostok.Hercules.Consumers
             {
                 readTask = null;
 
-                log.Info(
-                    "Current sharding settings: shard with index {ShardIndex} from {ShardCount}.",
-                    shardingSettings.ClientShardIndex,
-                    shardingSettings.ClientShardCount);
-
-                log.Info("Current coordinates: {StreamCoordinates}.", coordinates);
+                LogShardingSettings();
+                LogCoordinates("Current", coordinates);
 
                 var endCoordinates = await SeekToEndAsync().ConfigureAwait(false);
-                log.Info("End coordinates: {StreamCoordinates}.", endCoordinates);
+                LogCoordinates("End", endCoordinates);
 
                 var storageCoordinates = await settings.CoordinatesStorage.GetCurrentAsync().ConfigureAwait(false);
-                log.Info("Storage coordinates: {StreamCoordinates}.", storageCoordinates);
+                LogCoordinates("Storage", storageCoordinates);
 
                 if (endCoordinates.Positions.Any(p => storageCoordinates.Positions.All(pp => pp.Partition != p.Partition)))
                 {
@@ -294,5 +292,14 @@ namespace Vostok.Hercules.Consumers
             eventsMetric?.For("in").Add(eventsIn);
             iterationMetric?.For("in").Report(eventsIn);
         }
+
+        private void LogCoordinates(string message, StreamCoordinates streamCoordinates) =>
+            log.Info($"{message} coordinates: {{StreamCoordinates}}.", streamCoordinates);
+
+        private void LogShardingSettings() =>
+            log.Info(
+                "Current sharding settings: shard with index {ShardIndex} from {ShardCount}.",
+                shardingSettings.ClientShardIndex,
+                shardingSettings.ClientShardCount);
     }
 }
