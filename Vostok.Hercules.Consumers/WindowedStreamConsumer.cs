@@ -75,8 +75,7 @@ namespace Vostok.Hercules.Consumers
 
                     if (restart)
                     {
-                        if (!await Restart().ConfigureAwait(false))
-                            continue;
+                        await Restart().ConfigureAwait(false);
                         restart = false;
                     }
 
