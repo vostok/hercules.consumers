@@ -96,7 +96,7 @@ namespace Vostok.Hercules.Consumers
             log.Info("Final coordinates: {StreamCoordinates}.", coordinates);
         }
 
-        private async Task<bool> Restart()
+        private async Task Restart()
         {
             using (new OperationContextToken("Restart"))
             {
@@ -119,12 +119,11 @@ namespace Vostok.Hercules.Consumers
                 {
                     log.Info("Some coordinates are missing. Returning end coordinates: {StreamCoordinates}.", endCoordinates);
                     coordinates = endCoordinates;
-                    return true;
+                    return;
                 }
 
                 log.Info("Returning storage coordinates: {StreamCoordinates}.", storageCoordinates);
                 coordinates = storageCoordinates;
-                return true;
             }
         }
 

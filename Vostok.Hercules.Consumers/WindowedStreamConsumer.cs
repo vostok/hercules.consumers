@@ -101,7 +101,7 @@ namespace Vostok.Hercules.Consumers
             LogCoordinates("Final", leftCoordinates, rightCoordinates);
         }
 
-        private async Task<bool> Restart()
+        private async Task Restart()
         {
             using (new OperationContextToken("Restart"))
             {
@@ -118,8 +118,6 @@ namespace Vostok.Hercules.Consumers
                     log.Error(e, "Failed to restart windows.");
                     windows.Clear();
                 }
-
-                return true;
             }
         }
 
