@@ -10,7 +10,7 @@ namespace Vostok.Hercules.Consumers.Helpers
     public static class StreamCoordinatesMerger
     {
         [NotNull]
-        public static StreamCoordinates MergeMax([NotNull] StreamCoordinates left, [NotNull] StreamCoordinates right)
+        public static StreamCoordinates MergeMaxWith([NotNull] this StreamCoordinates left, [NotNull] StreamCoordinates right)
         {
             var map = left.ToDictionary();
 
@@ -34,7 +34,7 @@ namespace Vostok.Hercules.Consumers.Helpers
         }
 
         [NotNull]
-        public static StreamCoordinates MergeMin([NotNull] StreamCoordinates left, [NotNull] StreamCoordinates right)
+        public static StreamCoordinates MergeMinWith([NotNull] this StreamCoordinates left, [NotNull] StreamCoordinates right)
         {
             var map = left.ToDictionary();
 
@@ -58,34 +58,23 @@ namespace Vostok.Hercules.Consumers.Helpers
         }
 
         /// <summary>
-        /// Add zeros to left, filter by right partitions.
+        /// Filter by next partitions.
         /// </summary>
-        public static StreamCoordinates FixQueryCoordinates([NotNull] StreamCoordinates left, [NotNull] StreamCoordinates right)
+        public static StreamCoordinates FilterBy([NotNull] this StreamCoordinates left, [NotNull] StreamCoordinates right)
         {
             var map = left.ToDictionary();
             var result = new List<StreamPosition>();
 
             foreach (var position in right.Positions)
             {
-                if (!map.TryGetValue(position.Partition, out var inital))
-                {
-                    result.Add(
-                        new StreamPosition
-                        {
-                            Offset = 0,
-                            Partition = position.Partition
-                        });
-                }
-                else
-                {
-                    result.Add(inital);
-                }
+                if (map.TryGetValue(position.Partition, out var was))
+                    result.Add(was);
             }
 
             return new StreamCoordinates(result.ToArray());
         }
 
-        public static long Distance([NotNull] StreamCoordinates from, [NotNull] StreamCoordinates to)
+        public static long DistanceTo([NotNull] this StreamCoordinates from, [NotNull] StreamCoordinates to)
         {
             var map = from.ToDictionary();
             var result = 0L;

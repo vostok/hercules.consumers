@@ -15,7 +15,6 @@ namespace Vostok.Hercules.Consumers
             [NotNull] string streamName,
             [NotNull] Func<string> apiKeyProvider,
             [NotNull] IClusterProvider streamApiCluster,
-            [NotNull] Action<T> onEvent,
             [NotNull] Func<IBinaryBufferReader, IHerculesEventBuilder<T>> eventBuilderProvider,
             [NotNull] IStreamCoordinatesStorage coordinatesStorage,
             [NotNull] Func<StreamShardingSettings> shardingSettingsProvider)
@@ -23,7 +22,6 @@ namespace Vostok.Hercules.Consumers
             StreamName = streamName ?? throw new ArgumentNullException(nameof(streamName));
             ApiKeyProvider = apiKeyProvider ?? throw new ArgumentNullException(nameof(apiKeyProvider));
             StreamApiCluster = streamApiCluster ?? throw new ArgumentNullException(nameof(streamApiCluster));
-            OnEvent = onEvent ?? throw new ArgumentNullException(nameof(onEvent));
             EventBuilderProvider = eventBuilderProvider ?? throw new ArgumentNullException(nameof(eventBuilderProvider));
             CoordinatesStorage = coordinatesStorage ?? throw new ArgumentNullException(nameof(coordinatesStorage));
             ShardingSettingsProvider = shardingSettingsProvider ?? throw new ArgumentNullException(nameof(shardingSettingsProvider));
@@ -38,14 +36,17 @@ namespace Vostok.Hercules.Consumers
         [NotNull]
         public IClusterProvider StreamApiCluster { get; }
 
-        [NotNull]
-        public Action<T> OnEvent { get; }
+        [CanBeNull]
+        public Action<T, StreamCoordinates> OnEvent { get; set; }
 
         [CanBeNull]
         public Action<StreamCoordinates> OnBatchBegin { get; set; }
 
         [CanBeNull]
         public Action<StreamCoordinates> OnBatchEnd { get; set; }
+
+        [CanBeNull]
+        public Action<StreamCoordinates> OnRestart { get; set; }
 
         [NotNull]
         public Func<IBinaryBufferReader, IHerculesEventBuilder<T>> EventBuilderProvider { get; }

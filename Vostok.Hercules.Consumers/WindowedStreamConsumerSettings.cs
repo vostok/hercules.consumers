@@ -1,16 +1,13 @@
 ﻿using System;
 using JetBrains.Annotations;
-using Vostok.Clusterclient.Core;
 using Vostok.Clusterclient.Core.Topology;
 using Vostok.Commons.Time;
 using Vostok.Hercules.Client.Abstractions.Events;
-using Vostok.Hercules.Client.Abstractions.Models;
-using Vostok.Metrics;
 
 namespace Vostok.Hercules.Consumers
 {
     [PublicAPI]
-    public class WindowedStreamConsumerSettings<T, TKey>
+    public class WindowedStreamConsumerSettings<T, TKey> : BatchesStreamConsumerSettings<T>
     {
         public WindowedStreamConsumerSettings(
             [NotNull] string streamName,
@@ -23,28 +20,20 @@ namespace Vostok.Hercules.Consumers
             [NotNull] IStreamCoordinatesStorage leftCoordinatesStorage,
             [NotNull] IStreamCoordinatesStorage rightCoordinatesStorage,
             [NotNull] Func<StreamShardingSettings> shardingSettingsProvider)
+            : base(
+                streamName,
+                apiKeyProvider,
+                streamApiCluster,
+                eventBuilderProvider,
+                rightCoordinatesStorage,
+                shardingSettingsProvider)
         {
-            StreamName = streamName ?? throw new ArgumentNullException(nameof(streamName));
-            ApiKeyProvider = apiKeyProvider ?? throw new ArgumentNullException(nameof(apiKeyProvider));
-            StreamApiCluster = streamApiCluster ?? throw new ArgumentNullException(nameof(streamApiCluster));
             KeyProvider = keyProvider ?? throw new ArgumentNullException(nameof(keyProvider));
             TimestampProvider = timestampProvider ?? throw new ArgumentNullException(nameof(timestampProvider));
             CreateWindow = createWindow ?? throw new ArgumentNullException(nameof(createWindow));
-            EventBuilderProvider = eventBuilderProvider ?? throw new ArgumentNullException(nameof(eventBuilderProvider));
             LeftCoordinatesStorage = leftCoordinatesStorage ?? throw new ArgumentNullException(nameof(leftCoordinatesStorage));
-            RightCoordinatesStorage = rightCoordinatesStorage ?? throw new ArgumentNullException(nameof(rightCoordinatesStorage));
-            ShardingSettingsProvider = shardingSettingsProvider ?? throw new ArgumentNullException(nameof(shardingSettingsProvider));
         }
-
-        [NotNull]
-        public string StreamName { get; }
-
-        [NotNull]
-        public Func<string> ApiKeyProvider { get; }
-
-        [NotNull]
-        public IClusterProvider StreamApiCluster { get; }
-
+        
         [NotNull]
         public Func<T, TKey> KeyProvider { get; }
 
@@ -53,52 +42,17 @@ namespace Vostok.Hercules.Consumers
 
         [NotNull]
         public Func<TKey, IWindow> CreateWindow { get; }
-
-        [NotNull]
-        public Func<IBinaryBufferReader, IHerculesEventBuilder<T>> EventBuilderProvider { get; }
-
+        
         [NotNull]
         public IStreamCoordinatesStorage LeftCoordinatesStorage { get; }
-
-        [NotNull]
-        public IStreamCoordinatesStorage RightCoordinatesStorage { get; }
-
-        [NotNull]
-        public Func<StreamShardingSettings> ShardingSettingsProvider { get; }
-
-        [CanBeNull]
-        public Action<StreamCoordinates> OnBatchBegin { get; set; }
-
-        [CanBeNull]
-        public Action<StreamCoordinates> OnBatchEnd { get; set; }
-
-        [CanBeNull]
-        public ClusterClientSetup StreamApiClientAdditionalSetup { get; set; }
-
-        [CanBeNull]
-        public IMetricContext MetricContext { get; set; }
-
-        public int EventsReadBatchSize { get; set; } = ConsumersConstants.EventsReadBatchSize;
-
-        public TimeSpan EventsReadTimeout { get; set; } = ConsumersConstants.EventsReadTimeout;
-
-        public TimeSpan DelayOnError { get; set; } = ConsumersConstants.DelayOnError;
-
-        public TimeSpan DelayOnNoEvents { get; set; } = ConsumersConstants.DelayOnNoEvents;
-
-        public int MaxPooledBufferSize { get; set; } = ConsumersConstants.MaxPooledBufferSize;
-
-        public int MaxPooledBuffersPerBucket { get; set; } = ConsumersConstants.MaxPooledBuffersPerBucket;
-
+        
         public TimeSpan Period { get; set; } = 1.Minutes();
 
         public TimeSpan Lag { get; set; } = 30.Seconds();
 
         public TimeSpan MaximumDeltaBeforeNow { get; set; } = 1.Days();
 
-        public TimeSpan MaximumDeltaAfterNow { get; set; } = 1.Minutes();
-
-        public TimeSpan WindowsTtl { get; set; } = 1.Hours();
+        public TimeSpan MaximumDeltaAfterNow { get; set; } = 5.Seconds();
 
         public interface IWindow
         {

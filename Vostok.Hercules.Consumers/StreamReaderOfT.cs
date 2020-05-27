@@ -78,8 +78,6 @@ namespace Vostok.Hercules.Consumers
                     "Read {EventsCount} event(s) from Hercules stream '{StreamName}'.",
                     readResult.Payload.Events.Count,
                     settings.StreamName);
-
-                eventsQuery.Coordinates = StreamCoordinatesMerger.FixQueryCoordinates(coordinates, readResult.Payload.Next);
             }
             else
             {
@@ -117,7 +115,7 @@ namespace Vostok.Hercules.Consumers
             {
                 var endCoordinates = await SeekToEndAsync(shardingSettings, cancellationToken).ConfigureAwait(false);
 
-                var distance = StreamCoordinatesMerger.Distance(coordinates, endCoordinates);
+                var distance = coordinates.DistanceTo(endCoordinates);
 
                 log.Debug(
                     "Stream remaining events: {Count}. Current coordinates: {CurrentCoordinates}, end coordinates: {EndCoordinates}.",
