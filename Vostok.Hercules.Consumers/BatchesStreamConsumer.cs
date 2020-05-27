@@ -47,7 +47,7 @@ namespace Vostok.Hercules.Consumers
             this.log = log = (log ?? LogProvider.Get()).ForContext<BatchesStreamConsumer<T>>();
 
             var bufferPool = new BufferPool(settings.MaxPooledBufferSize, settings.MaxPooledBuffersPerBucket);
-            client = new StreamApiRequestSender(settings.StreamApiCluster, log, bufferPool, settings.StreamApiClientAdditionalSetup);
+            client = new StreamApiRequestSender(settings.StreamApiCluster, log.WithErrorsTransformedToWarns(), bufferPool, settings.StreamApiClientAdditionalSetup);
 
             var metricContext = settings.MetricContext ?? new DevNullMetricContext();
             eventsMetric = metricContext.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
@@ -255,7 +255,7 @@ namespace Vostok.Hercules.Consumers
                 return null;
 
             var end = SeekToEndAsync(shardingSettings).GetAwaiter().GetResult();
-            var distance = StreamCoordinatesMerger.DistanceTo(coordinates, end);
+            var distance = coordinates.DistanceTo(end);
 
             log.Info(
                 "Consumer progress: events remaining: {EventsRemaining}. Current coordinates: {CurrentCoordinates}, end coordinates: {EndCoordinates}.",

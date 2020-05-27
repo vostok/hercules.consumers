@@ -23,6 +23,6 @@ namespace Vostok.Hercules.Consumers.Helpers
         }
 
         private void AddFirstActiveEventCoordinates(StreamCoordinates coordinates) =>
-            FirstEventCoordinates = StreamCoordinatesMerger.MergeMinWith(FirstEventCoordinates, coordinates);
+            FirstEventCoordinates = FirstEventCoordinates.MergeMinWith(coordinates);
     }
 }
