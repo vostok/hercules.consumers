@@ -146,7 +146,7 @@ namespace Vostok.Hercules.Consumers
             var key = settings.KeyProvider(@event);
             if (!windows.ContainsKey(key))
                 windows[key] = new Windows<T, TKey>(key, settings);
-            if (!windows[key].AddEvent(@event, queryCoordinates))
+            if (!windows[key].AddEvent(@event, queryCoordinates) && !restart)
                 eventsMetric?.For("dropped").Increment();
         }
 

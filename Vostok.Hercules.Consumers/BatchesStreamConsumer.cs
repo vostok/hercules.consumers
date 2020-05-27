@@ -37,7 +37,7 @@ namespace Vostok.Hercules.Consumers
         protected private StreamShardingSettings shardingSettings;
 
         private volatile int iteration;
-        private volatile bool restart;
+        protected private volatile bool restart;
         private volatile Task<RawReadStreamPayload> readTask;
         private volatile Task saveCoordinatesTask;
 
