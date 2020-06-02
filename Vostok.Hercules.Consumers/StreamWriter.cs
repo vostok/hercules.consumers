@@ -43,7 +43,7 @@ namespace Vostok.Hercules.Consumers
                 }
                 catch (Exception e)
                 {
-                    log.Error(e, "Failed to send aggregated events.");
+                    log.Warn(e, "Failed to send aggregated events.");
                     await Task.Delay(settings.DelayOnError, cancellationToken).ConfigureAwait(false);
                 }
             }

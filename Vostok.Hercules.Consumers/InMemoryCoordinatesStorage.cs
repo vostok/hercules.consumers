@@ -34,7 +34,7 @@ namespace Vostok.Hercules.Consumers
                 if (!to.AdvancesOver(currentCoordinates))
                     return;
 
-                var mergedCoordinates = StreamCoordinatesMerger.MergeMax(currentCoordinates, to);
+                var mergedCoordinates = currentCoordinates.MergeMaxWith(to);
 
                 coordinates = mergedCoordinates;
             }

@@ -59,21 +59,35 @@ namespace Vostok.Hercules.Consumers
                 readResult = await settings.StreamClient.ReadAsync(eventsQuery, settings.EventsReadTimeout, cancellationToken).ConfigureAwait(false);
                 if (!readResult.IsSuccessful)
                 {
-                    log.Error(
-                        "Failed to read events from Hercules stream '{StreamName}'. Will try again {RemainingAttempts} more times.",
+                    log.Warn(
+                        "Failed to read events from Hercules stream '{StreamName}'. " +
+                        "Status: {Status}. Error: '{Error}'. " +
+                        "Will try again {RemainingAttempts} more times.",
                         settings.StreamName,
+                        readResult.Status,
+                        readResult.ErrorDetails,
                         remainingAttempts);
                     if (remainingAttempts > 0)
                         await Task.Delay(settings.DelayOnError, cancellationToken).SilentlyContinue().ConfigureAwait(false);
                 }
             } while (!readResult.IsSuccessful && remainingAttempts > 0);
 
-            log.Info(
-                "Read {EventsCount} event(s) from Hercules stream '{StreamName}'.",
-                readResult.Payload.Events.Count,
-                settings.StreamName);
-
-            eventsQuery.Coordinates = StreamCoordinatesMerger.FixQueryCoordinates(coordinates, readResult.Payload.Next);
+            if (readResult.IsSuccessful)
+            {
+                log.Info(
+                    "Read {EventsCount} event(s) from Hercules stream '{StreamName}'.",
+                    readResult.Payload.Events.Count,
+                    settings.StreamName);
+            }
+            else
+            {
+                log.Error(
+                    "Failed to read events from Hercules stream '{StreamName}'. " +
+                    "Status: {Status}. Error: '{Error}'.",
+                    settings.StreamName,
+                    readResult.Status,
+                    readResult.ErrorDetails);
+            }
 
             return (eventsQuery, readResult);
         }
@@ -92,7 +106,7 @@ namespace Vostok.Hercules.Consumers
             return end.Payload.Next;
         }
 
-        public async Task<long> CountStreamRemainingEventsAsync(
+        public async Task<long?> CountStreamRemainingEventsAsync(
             StreamCoordinates coordinates,
             StreamShardingSettings shardingSettings,
             CancellationToken cancellationToken = default)
@@ -101,7 +115,7 @@ namespace Vostok.Hercules.Consumers
             {
                 var endCoordinates = await SeekToEndAsync(shardingSettings, cancellationToken).ConfigureAwait(false);
 
-                var distance = StreamCoordinatesMerger.Distance(coordinates, endCoordinates);
+                var distance = coordinates.DistanceTo(endCoordinates);
 
                 log.Debug(
                     "Stream remaining events: {Count}. Current coordinates: {CurrentCoordinates}, end coordinates: {EndCoordinates}.",
@@ -113,8 +127,8 @@ namespace Vostok.Hercules.Consumers
             }
             catch (Exception e)
             {
-                log.Error(e, "Failed to count remaining events.");
-                return 0;
+                log.Warn(e, "Failed to count remaining events.");
+                return null;
             }
         }
     }
