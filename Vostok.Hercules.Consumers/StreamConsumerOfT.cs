@@ -7,7 +7,6 @@ using Vostok.Commons.Helpers.Extensions;
 using Vostok.Hercules.Client.Abstractions.Models;
 using Vostok.Hercules.Client.Abstractions.Queries;
 using Vostok.Hercules.Client.Abstractions.Results;
-using Vostok.Hercules.Consumers.Helpers;
 using Vostok.Logging.Abstractions;
 using Vostok.Metrics.Grouping;
 using Vostok.Metrics.Primitives.Gauge;
@@ -52,7 +51,7 @@ namespace Vostok.Hercules.Consumers
 
             eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
             iterationMetric = settings.MetricContext?.CreateSummary("iteration", "type", new SummaryConfig {Quantiles = new[] {0.5, 0.75, 1}});
-            settings.MetricContext?.CreateFuncGauge("events", "type").For("remaining").SetValueProvider(CountStreamRemainingEvents);
+            settings.MetricContext?.CreateFuncGauge("events", "type").For("remaining").SetValueProvider(() => CountStreamRemainingEvents());
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)
@@ -91,7 +90,7 @@ namespace Vostok.Hercules.Consumers
                     if (cancellationToken.IsCancellationRequested)
                         return;
 
-                    log.Error(error);
+                    log.Error(error, "Failed to consume stream.");
 
                     await Task.Delay(settings.DelayOnError, cancellationToken).SilentlyContinue().ConfigureAwait(false);
                 }
@@ -132,7 +131,7 @@ namespace Vostok.Hercules.Consumers
             var events = result.Payload.Events;
             LogProgress(events.Count);
 
-            if (events.Count != 0 || settings.HandleWithoutEvents)
+            if (events.Count != 0)
             {
                 using (iterationMetric?.For("handle_time").Measure())
                 {
@@ -157,7 +156,7 @@ namespace Vostok.Hercules.Consumers
             iterationMetric?.For("in").Report(eventsIn);
         }
 
-        private double CountStreamRemainingEvents()
+        private long? CountStreamRemainingEvents()
         {
             var remaining = streamReader.CountStreamRemainingEventsAsync(coordinates, shardingSettings).GetAwaiter().GetResult();
             log.Info("Consumer progress: events remaining: {EventsRemaining}.", remaining);

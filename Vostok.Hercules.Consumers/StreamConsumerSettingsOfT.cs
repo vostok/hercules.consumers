@@ -40,8 +40,6 @@ namespace Vostok.Hercules.Consumers
         [CanBeNull]
         public IMetricContext MetricContext { get; set; }
 
-        public bool HandleWithoutEvents { get; set; }
-
         public int EventsReadBatchSize { get; set; } = ConsumersConstants.EventsReadBatchSize;
 
         public TimeSpan EventsReadTimeout { get; set; } = ConsumersConstants.EventsReadTimeout;

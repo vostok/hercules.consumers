@@ -2,7 +2,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Vostok.Hercules.Client.Abstractions;
 using Vostok.Hercules.Client.Abstractions.Events;
 using Vostok.Hercules.Client.Abstractions.Models;
 using Vostok.Hercules.Client.Abstractions.Queries;
@@ -46,7 +45,7 @@ namespace Vostok.Hercules.Consumers
             CancellationToken cancellationToken = default) =>
             reader.SeekToEndAsync(shardingSettings, cancellationToken);
 
-        public Task<long> CountStreamRemainingEventsAsync(
+        public Task<long?> CountStreamRemainingEventsAsync(
             StreamCoordinates coordinates,
             StreamShardingSettings shardingSettings,
             CancellationToken cancellationToken = default) =>
