@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Vostok.Commons.Time;
 using Vostok.Hercules.Client.Abstractions.Models;
 
 namespace Vostok.Hercules.Consumers.Helpers
@@ -40,7 +41,7 @@ namespace Vostok.Hercules.Consumers.Helpers
                     return true;
             }
 
-            var newWindow = CreateWindow(timestamp, coordinates);
+            var newWindow = CreateWindow(@event, timestamp, coordinates);
             newWindow.AddEvent(@event, timestamp);
             windows.Add(newWindow);
             LastEventAdded = now.UtcDateTime;
@@ -74,10 +75,10 @@ namespace Vostok.Hercules.Consumers.Helpers
             return result;
         }
 
-        private Window<T, TKey> CreateWindow(DateTimeOffset timestamp, StreamCoordinates coordinates)
+        private Window<T, TKey> CreateWindow(T @event, DateTimeOffset timestamp, StreamCoordinates coordinates)
         {
-            var period = settings.Period;
-            var lag = settings.Lag;
+            var period = TimeSpanArithmetics.Min(settings.PeriodProvider?.Invoke(@event) ?? settings.Period, settings.MaximumAllowedPeriod);
+            var lag = TimeSpanArithmetics.Min(settings.LagProvider?.Invoke(@event) ?? settings.Lag, settings.MaximumAllowedLag);
 
             var start = timestamp.AddTicks(-timestamp.Ticks % period.Ticks);
             var result = new Window<T, TKey>(settings.CreateWindow(key), coordinates, start, start + period, period, lag);

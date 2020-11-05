@@ -47,11 +47,17 @@ namespace Vostok.Hercules.Consumers
         public IStreamCoordinatesStorage LeftCoordinatesStorage { get; }
 
         public TimeSpan Period { get; set; } = 1.Minutes();
-
         public TimeSpan Lag { get; set; } = 30.Seconds();
 
-        public TimeSpan MaximumDeltaBeforeNow { get; set; } = 1.Days();
+        [CanBeNull]
+        public Func<T, TimeSpan?> PeriodProvider { get; set; }
+        [CanBeNull]
+        public Func<T, TimeSpan?> LagProvider { get; set; }
 
+        public TimeSpan MaximumAllowedPeriod { get; set; } = 1.Minutes();
+        public TimeSpan MaximumAllowedLag { get; set; } = 1.Minutes();
+
+        public TimeSpan MaximumDeltaBeforeNow { get; set; } = 1.Days();
         public TimeSpan MaximumDeltaAfterNow { get; set; } = 5.Seconds();
 
         public interface IWindow
