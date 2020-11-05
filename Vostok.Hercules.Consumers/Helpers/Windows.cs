@@ -73,7 +73,7 @@ namespace Vostok.Hercules.Consumers.Helpers
 
             return result;
         }
-        
+
         private Window<T, TKey> CreateWindow(DateTimeOffset timestamp, StreamCoordinates coordinates)
         {
             var period = settings.Period;

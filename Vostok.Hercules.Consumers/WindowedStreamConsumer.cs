@@ -101,7 +101,7 @@ namespace Vostok.Hercules.Consumers
             windows.Clear();
 
             var partitionsCount = await GetPartitionsCount().ConfigureAwait(false);
-            
+
             foreach (var position in leftCoordinates.Positions)
             {
                 var start = position.Offset;
@@ -140,7 +140,7 @@ namespace Vostok.Hercules.Consumers
 
             return result.Next.Positions.Single().Offset;
         }
-        
+
         private void AddEvent(T @event, StreamCoordinates queryCoordinates)
         {
             var key = settings.KeyProvider(@event);

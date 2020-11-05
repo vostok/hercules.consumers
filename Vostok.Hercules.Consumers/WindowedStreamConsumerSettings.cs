@@ -33,7 +33,7 @@ namespace Vostok.Hercules.Consumers
             CreateWindow = createWindow ?? throw new ArgumentNullException(nameof(createWindow));
             LeftCoordinatesStorage = leftCoordinatesStorage ?? throw new ArgumentNullException(nameof(leftCoordinatesStorage));
         }
-        
+
         [NotNull]
         public Func<T, TKey> KeyProvider { get; }
 
@@ -42,10 +42,10 @@ namespace Vostok.Hercules.Consumers
 
         [NotNull]
         public Func<TKey, IWindow> CreateWindow { get; }
-        
+
         [NotNull]
         public IStreamCoordinatesStorage LeftCoordinatesStorage { get; }
-        
+
         public TimeSpan Period { get; set; } = 1.Minutes();
 
         public TimeSpan Lag { get; set; } = 30.Seconds();

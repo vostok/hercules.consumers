@@ -29,17 +29,17 @@ namespace Vostok.Hercules.Consumers
     {
         private readonly BatchesStreamConsumerSettings<T> settings;
         private readonly ILog log;
-        protected private readonly IMetricGroup1<IIntegerGauge> eventsMetric;
-        protected private readonly IMetricGroup1<ITimer> iterationMetric;
         private readonly StreamApiRequestSender client;
 
         private StreamCoordinates coordinates;
-        protected private StreamShardingSettings shardingSettings;
 
         private volatile int iteration;
-        protected private volatile bool restart;
         private volatile Task<RawReadStreamPayload> readTask;
         private volatile Task saveCoordinatesTask;
+        protected private readonly IMetricGroup1<IIntegerGauge> eventsMetric;
+        protected private readonly IMetricGroup1<ITimer> iterationMetric;
+        protected private StreamShardingSettings shardingSettings;
+        protected private volatile bool restart;
 
         public BatchesStreamConsumer([NotNull] BatchesStreamConsumerSettings<T> settings, [CanBeNull] ILog log)
         {
@@ -47,7 +47,7 @@ namespace Vostok.Hercules.Consumers
             this.log = log = (log ?? LogProvider.Get()).ForContext<BatchesStreamConsumer<T>>();
 
             var bufferPool = new BufferPool(settings.MaxPooledBufferSize, settings.MaxPooledBuffersPerBucket);
-            client = new StreamApiRequestSender(settings.StreamApiCluster, log/*.WithErrorsTransformedToWarns()*/, bufferPool, settings.StreamApiClientAdditionalSetup);
+            client = new StreamApiRequestSender(settings.StreamApiCluster, log /*.WithErrorsTransformedToWarns()*/, bufferPool, settings.StreamApiClientAdditionalSetup);
 
             var metricContext = settings.MetricContext ?? new DevNullMetricContext();
             eventsMetric = metricContext.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
@@ -95,6 +95,9 @@ namespace Vostok.Hercules.Consumers
             await (saveCoordinatesTask ?? Task.CompletedTask).ConfigureAwait(false);
             log.Info("Final coordinates: {StreamCoordinates}.", coordinates);
         }
+
+        protected void LogCoordinates(string message, StreamCoordinates streamCoordinates) =>
+            log.Info($"{message} coordinates: {{StreamCoordinates}}.", streamCoordinates);
 
         private async Task Restart()
         {
@@ -155,6 +158,54 @@ namespace Vostok.Hercules.Consumers
             }
         }
 
+        private async Task<RawReadStreamPayload> ReadAsync()
+        {
+            var query = new ReadStreamQuery(settings.StreamName)
+            {
+                Coordinates = coordinates,
+                ClientShard = shardingSettings.ClientShardIndex,
+                ClientShardCount = shardingSettings.ClientShardCount,
+                Limit = settings.EventsReadBatchSize
+            };
+
+            return await ReadAsync(query).ConfigureAwait(false);
+        }
+
+        private double? CountStreamRemainingEvents()
+        {
+            if (coordinates == null)
+                return null;
+
+            var end = SeekToEndAsync(shardingSettings).GetAwaiter().GetResult();
+            var distance = coordinates.DistanceTo(end);
+
+            log.Info(
+                "Consumer progress: events remaining: {EventsRemaining}. Current coordinates: {CurrentCoordinates}, end coordinates: {EndCoordinates}.",
+                distance,
+                coordinates,
+                end);
+
+            return distance;
+        }
+
+        private async Task DelayOnError()
+        {
+            await Task.Delay(settings.DelayOnError).SilentlyContinue().ConfigureAwait(false);
+        }
+
+        private void LogProgress(int eventsIn)
+        {
+            log.Info("Consumer progress: events in: {EventsIn}.", eventsIn);
+            eventsMetric?.For("in").Add(eventsIn);
+            iterationMetric?.For("in").Report(eventsIn);
+        }
+
+        private void LogShardingSettings() =>
+            log.Info(
+                "Current sharding settings: shard with index {ShardIndex} from {ShardCount}.",
+                shardingSettings.ClientShardIndex,
+                shardingSettings.ClientShardCount);
+
         protected private void HandleEvents(RawReadStreamPayload result, StreamCoordinates queryCoordinates)
         {
             int count;
@@ -195,19 +246,6 @@ namespace Vostok.Hercules.Consumers
                 Thread.Sleep(settings.DelayOnNoEvents);
         }
 
-        private async Task<RawReadStreamPayload> ReadAsync()
-        {
-            var query = new ReadStreamQuery(settings.StreamName)
-            {
-                Coordinates = coordinates,
-                ClientShard = shardingSettings.ClientShardIndex,
-                ClientShardCount = shardingSettings.ClientShardCount,
-                Limit = settings.EventsReadBatchSize
-            };
-
-            return await ReadAsync(query).ConfigureAwait(false);
-        }
-
         protected private async Task<RawReadStreamPayload> ReadAsync(ReadStreamQuery query)
         {
             using (new OperationContextToken("ReadEvents"))
@@ -244,26 +282,9 @@ namespace Vostok.Hercules.Consumers
                     "Read {BytesCount} byte(s) from Hercules stream '{StreamName}'.",
                     readResult.Payload.Content.Count,
                     settings.StreamName);
-                
+
                 return readResult.Payload;
             }
-        }
-
-        private double? CountStreamRemainingEvents()
-        {
-            if (coordinates == null)
-                return null;
-
-            var end = SeekToEndAsync(shardingSettings).GetAwaiter().GetResult();
-            var distance = coordinates.DistanceTo(end);
-
-            log.Info(
-                "Consumer progress: events remaining: {EventsRemaining}. Current coordinates: {CurrentCoordinates}, end coordinates: {EndCoordinates}.",
-                distance,
-                coordinates,
-                end);
-
-            return distance;
         }
 
         // ReSharper disable once ParameterHidesMember
@@ -295,26 +316,5 @@ namespace Vostok.Hercules.Consumers
 
             return result.Payload.Next;
         }
-
-        private async Task DelayOnError()
-        {
-            await Task.Delay(settings.DelayOnError).SilentlyContinue().ConfigureAwait(false);
-        }
-
-        private void LogProgress(int eventsIn)
-        {
-            log.Info("Consumer progress: events in: {EventsIn}.", eventsIn);
-            eventsMetric?.For("in").Add(eventsIn);
-            iterationMetric?.For("in").Report(eventsIn);
-        }
-
-        protected void LogCoordinates(string message, StreamCoordinates streamCoordinates) =>
-            log.Info($"{message} coordinates: {{StreamCoordinates}}.", streamCoordinates);
-
-        private void LogShardingSettings() =>
-            log.Info(
-                "Current sharding settings: shard with index {ShardIndex} from {ShardCount}.",
-                shardingSettings.ClientShardIndex,
-                shardingSettings.ClientShardCount);
     }
 }

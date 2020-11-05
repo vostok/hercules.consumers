@@ -31,10 +31,10 @@ namespace Vostok.Hercules.Consumers
             this.log = log = (log ?? LogProvider.Get()).ForContext<StreamBinaryWriter>();
 
             var bufferPool = new BufferPool(settings.MaxPooledBufferSize, settings.MaxPooledBuffersPerBucket);
-            client = new GateRequestSender(settings.GateCluster, log/*.WithErrorsTransformedToWarns()*/, bufferPool, settings.GateClientAdditionalSetup);
+            client = new GateRequestSender(settings.GateCluster, log /*.WithErrorsTransformedToWarns()*/, bufferPool, settings.GateClientAdditionalSetup);
 
-            eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig { ResetOnScrape = true });
-            iterationMetric = settings.MetricContext?.CreateSummary("iteration", "type", new SummaryConfig { Quantiles = new[] { 0.5, 0.75, 1 } });
+            eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
+            iterationMetric = settings.MetricContext?.CreateSummary("iteration", "type", new SummaryConfig {Quantiles = new[] {0.5, 0.75, 1}});
             settings.MetricContext?.CreateFuncGauge("buffer", "type").For("rented_writer").SetValueProvider(() => BufferPool.Rented);
         }
 
@@ -53,11 +53,12 @@ namespace Vostok.Hercules.Consumers
                 do
                 {
                     result = await client.SendAsync(
-                        streamName,
-                        settings.ApiKeyProvider(),
-                        new ValueDisposable<Content>(new Content(bytes), new EmptyDisposable()),
-                        settings.EventsWriteTimeout,
-                        CancellationToken.None).ConfigureAwait(false);
+                            streamName,
+                            settings.ApiKeyProvider(),
+                            new ValueDisposable<Content>(new Content(bytes), new EmptyDisposable()),
+                            settings.EventsWriteTimeout,
+                            CancellationToken.None)
+                        .ConfigureAwait(false);
 
                     if (!result.IsSuccessful)
                     {
