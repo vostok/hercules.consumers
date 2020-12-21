@@ -17,6 +17,7 @@ using Vostok.Metrics;
 using Vostok.Metrics.Grouping;
 using Vostok.Metrics.Primitives.Gauge;
 using Vostok.Metrics.Primitives.Timer;
+using Vostok.Tracing.Abstractions;
 using BinaryBufferReader = Vostok.Hercules.Client.Serialization.Readers.BinaryBufferReader;
 
 // ReSharper disable InconsistentNaming
@@ -30,6 +31,7 @@ namespace Vostok.Hercules.Consumers
         private readonly BatchesStreamConsumerSettings<T> settings;
         private readonly ILog log;
         private readonly StreamApiRequestSender client;
+        private readonly ITracer tracer;
 
         private StreamCoordinates coordinates;
 
@@ -45,6 +47,7 @@ namespace Vostok.Hercules.Consumers
         {
             this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
             this.log = log = (log ?? LogProvider.Get()).ForContext<BatchesStreamConsumer<T>>();
+            tracer = settings.Tracer ?? TracerProvider.Get();
 
             var bufferPool = new BufferPool(settings.MaxPooledBufferSize, settings.MaxPooledBuffersPerBucket);
             client = new StreamApiRequestSender(settings.StreamApiCluster, log /*.WithErrorsTransformedToWarns()*/, bufferPool, settings.StreamApiClientAdditionalSetup);
@@ -265,16 +268,27 @@ namespace Vostok.Hercules.Consumers
 
                 do
                 {
-                    readResult = await client.ReadAsync(query, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
-                    if (!readResult.IsSuccessful)
+                    using (var trace = new CustomTrace(nameof(ReadAsync), tracer))
                     {
-                        log.Warn(
-                            "Failed to read events from Hercules stream '{StreamName}'. " +
-                            "Status: {Status}. Error: '{Error}'.",
-                            settings.StreamName,
-                            readResult.Status,
-                            readResult.ErrorDetails);
-                        await DelayOnError().ConfigureAwait(false);
+
+                        readResult = await client.ReadAsync(query, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
+                        
+                        trace.SetStatus(readResult);
+
+                        if (!readResult.IsSuccessful)
+                        {
+                            log.Warn(
+                                "Failed to read events from Hercules stream '{StreamName}'. " +
+                                "Status: {Status}. Error: '{Error}'.",
+                                settings.StreamName,
+                                readResult.Status,
+                                readResult.ErrorDetails);
+                            await DelayOnError().ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            trace.SetSize(readResult.Payload.Content.Count);
+                        }
                     }
                 } while (!readResult.IsSuccessful);
 
