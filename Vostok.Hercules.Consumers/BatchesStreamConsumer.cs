@@ -18,6 +18,7 @@ using Vostok.Metrics.Grouping;
 using Vostok.Metrics.Primitives.Gauge;
 using Vostok.Metrics.Primitives.Timer;
 using Vostok.Tracing.Abstractions;
+using Vostok.Tracing.Extensions.Custom;
 using BinaryBufferReader = Vostok.Hercules.Client.Serialization.Readers.BinaryBufferReader;
 
 // ReSharper disable InconsistentNaming
@@ -79,9 +80,11 @@ namespace Vostok.Hercules.Consumers
                     }
 
                     using (new OperationContextToken($"Iteration-{iteration++}"))
+                    using (var operationSpan = tracer.BeginConsumerCustomOperationSpan("Iteration"))
                     using (iterationMetric?.For("time").Measure())
                     {
                         await MakeIteration().ConfigureAwait(false);
+                        operationSpan.SetSuccess();
                     }
                 }
                 catch (Exception error)
@@ -214,6 +217,7 @@ namespace Vostok.Hercules.Consumers
             int count;
 
             using (new OperationContextToken("HandleEvents"))
+            using (var operationSpan = tracer.BeginConsumerCustomOperationSpan("HandleEvents"))
             using (iterationMetric?.For("handle_time").Measure())
             {
                 // ReSharper disable once AssignNullToNotNullAttribute
@@ -241,7 +245,9 @@ namespace Vostok.Hercules.Consumers
                         EventsBinaryReader.ReadEvent(reader, DummyEventBuilder.Instance);
                     }
                 }
-
+                
+                operationSpan.SetOperationDetails(count);
+                operationSpan.SetSuccess();
                 LogProgress(count);
             }
 
@@ -252,8 +258,13 @@ namespace Vostok.Hercules.Consumers
         protected private async Task<RawReadStreamPayload> ReadAsync(ReadStreamQuery query)
         {
             using (new OperationContextToken("ReadEvents"))
+            using (var traceBuilder = tracer.BeginConsumerCustomOperationSpan("Read"))
             using (iterationMetric?.For("read_time").Measure())
             {
+                traceBuilder.SetCustomAnnotation("shardIndex", query.ClientShard.ToString());
+                traceBuilder.SetCustomAnnotation("streamName", settings.StreamName);
+                traceBuilder.SetCustomAnnotation("coordinates", query.Coordinates.ToString());
+                
                 log.Info(
                     "Reading {EventsCount} events from stream '{StreamName}'. " +
                     "Sharding settings: shard with index {ShardIndex} from {ShardCount}. " +
@@ -263,33 +274,26 @@ namespace Vostok.Hercules.Consumers
                     query.ClientShard,
                     query.ClientShardCount,
                     query.Coordinates);
+                traceBuilder.SetOperationDetails(query.Limit);
+                
 
                 RawReadStreamResult readResult;
 
                 do
                 {
-                    using (var trace = new CustomTrace(nameof(ReadAsync), tracer))
+                    readResult = await client.ReadAsync(query, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
+                 
+                    if (!readResult.IsSuccessful)
                     {
-
-                        readResult = await client.ReadAsync(query, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
-                        
-                        trace.SetStatus(readResult);
-
-                        if (!readResult.IsSuccessful)
-                        {
-                            log.Warn(
-                                "Failed to read events from Hercules stream '{StreamName}'. " +
-                                "Status: {Status}. Error: '{Error}'.",
-                                settings.StreamName,
-                                readResult.Status,
-                                readResult.ErrorDetails);
-                            await DelayOnError().ConfigureAwait(false);
-                        }
-                        else
-                        {
-                            trace.SetSize(readResult.Payload.Content.Count);
-                        }
+                        log.Warn(
+                            "Failed to read events from Hercules stream '{StreamName}'. " +
+                            "Status: {Status}. Error: '{Error}'.",
+                            settings.StreamName,
+                            readResult.Status,
+                            readResult.ErrorDetails);
+                        await DelayOnError().ConfigureAwait(false);
                     }
+                    
                 } while (!readResult.IsSuccessful);
 
                 log.Info(
