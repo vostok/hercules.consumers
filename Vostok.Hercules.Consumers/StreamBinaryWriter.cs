@@ -52,38 +52,39 @@ namespace Vostok.Hercules.Consumers
             }
             
             using (new OperationContextToken("WriteEvents"))
+            using (var traceBuilder = tracer.BeginConsumerCustomOperationSpan("Write"))    
             using (iterationMetric?.For("write_time").Measure())
             {
+                traceBuilder.SetOperationDetails(eventsCount);
+                traceBuilder.SetCustomAnnotation("streamName", streamName);
+                
                 InsertEventsResult result;
                 do
                 {
-                    using (var trace = new CustomTrace(nameof(WriteAsync), tracer))
+
+                    result = await client.SendAsync(
+                            streamName,
+                            settings.ApiKeyProvider(),
+                            new ValueDisposable<Content>(new Content(bytes), new EmptyDisposable()),
+                            settings.EventsWriteTimeout,
+                            CancellationToken.None)
+                        .ConfigureAwait(false);
+
+                    if (!result.IsSuccessful)
                     {
-                        result = await client.SendAsync(
-                                streamName,
-                                settings.ApiKeyProvider(),
-                                new ValueDisposable<Content>(new Content(bytes), new EmptyDisposable()),
-                                settings.EventsWriteTimeout,
-                                CancellationToken.None)
-                            .ConfigureAwait(false);
-                        
-                        trace.SetSize(bytes.Count);
-                        trace.SetStatus(result);
-                        
-                        if (!result.IsSuccessful)
-                        {
-                            log.Warn(
-                                "Failed to write events to Hercules stream '{StreamName}'. " +
-                                "Status: {Status}. Error: '{Error}'.",
-                                streamName,
-                                result.Status,
-                                result.ErrorDetails);
-                            await DelayOnError().ConfigureAwait(false);
-                        }
+                        log.Warn(
+                            "Failed to write events to Hercules stream '{StreamName}'. " +
+                            "Status: {Status}. Error: '{Error}'.",
+                            streamName,
+                            result.Status,
+                            result.ErrorDetails);
+                        await DelayOnError().ConfigureAwait(false);
                     }
+                    
                 } while (!result.IsSuccessful);
 
                 LogProgress(streamName, eventsCount);
+                traceBuilder.SetSuccess();
             }
         }
 
