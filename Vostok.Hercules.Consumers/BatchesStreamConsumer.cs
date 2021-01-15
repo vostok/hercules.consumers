@@ -315,22 +315,29 @@ namespace Vostok.Hercules.Consumers
             };
 
             SeekToEndStreamResult result;
-
-            do
+            using (var spanBuilder = tracer.BeginConsumerCustomOperationSpan("SeekToEnd"))
             {
-                result = await client.SeekToEndAsync(seekToEndQuery, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
-
-                if (!result.IsSuccessful)
+                do
                 {
-                    log.Warn(
-                        "Failed to seek to end for Hercules stream '{StreamName}'. " +
-                        "Status: {Status}. Error: '{Error}'.",
-                        settings.StreamName,
-                        result.Status,
-                        result.ErrorDetails);
-                    await DelayOnError().ConfigureAwait(false);
-                }
-            } while (!result.IsSuccessful);
+                    result = await client.SeekToEndAsync(seekToEndQuery, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
+
+                    if (!result.IsSuccessful)
+                    {
+                        log.Warn(
+                            "Failed to seek to end for Hercules stream '{StreamName}'. " +
+                            "Status: {Status}. Error: '{Error}'.",
+                            settings.StreamName,
+                            result.Status,
+                            result.ErrorDetails);
+                        await DelayOnError().ConfigureAwait(false);
+                    }
+                } while (!result.IsSuccessful);
+                
+                spanBuilder.SetCustomAnnotation("streamName", seekToEndQuery.Name);
+                spanBuilder.SetCustomAnnotation("clientShard", seekToEndQuery.ClientShard.ToString());
+
+                spanBuilder.SetSuccess();
+            }
 
             return result.Payload.Next;
         }
