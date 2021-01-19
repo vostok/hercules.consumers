@@ -84,7 +84,6 @@ namespace Vostok.Hercules.Consumers
                 } while (!result.IsSuccessful);
 
                 LogProgress(streamName, eventsCount);
-                traceBuilder.SetSuccess();
             }
         }
 

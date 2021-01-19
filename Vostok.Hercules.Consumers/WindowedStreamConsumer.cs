@@ -185,7 +185,6 @@ namespace Vostok.Hercules.Consumers
                     result.EventsCount);
                 
                 operationSpan.SetOperationDetails(result.EventsCount);
-                operationSpan.SetSuccess();
                 
                 stateMetric?.For("keys").Set(windows.Count);
                 stateMetric?.For("windows").Set(result.WindowsCount);

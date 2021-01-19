@@ -80,11 +80,10 @@ namespace Vostok.Hercules.Consumers
                     }
 
                     using (new OperationContextToken($"Iteration-{iteration++}"))
-                    using (var operationSpan = tracer.BeginConsumerCustomOperationSpan("Iteration"))
+                    using (tracer.BeginConsumerCustomOperationSpan("Iteration"))
                     using (iterationMetric?.For("time").Measure())
                     {
                         await MakeIteration().ConfigureAwait(false);
-                        operationSpan.SetSuccess();
                     }
                 }
                 catch (Exception error)
@@ -247,7 +246,6 @@ namespace Vostok.Hercules.Consumers
                 }
                 
                 operationSpan.SetOperationDetails(count);
-                operationSpan.SetSuccess();
                 LogProgress(count);
             }
 
@@ -335,8 +333,6 @@ namespace Vostok.Hercules.Consumers
                 
                 spanBuilder.SetCustomAnnotation("streamName", seekToEndQuery.Name);
                 spanBuilder.SetCustomAnnotation("clientShard", seekToEndQuery.ClientShard.ToString());
-
-                spanBuilder.SetSuccess();
             }
 
             return result.Payload.Next;
