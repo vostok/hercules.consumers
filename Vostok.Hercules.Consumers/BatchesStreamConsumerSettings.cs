@@ -5,6 +5,7 @@ using Vostok.Clusterclient.Core.Topology;
 using Vostok.Hercules.Client.Abstractions.Events;
 using Vostok.Hercules.Client.Abstractions.Models;
 using Vostok.Metrics;
+using Vostok.Tracing.Abstractions;
 
 namespace Vostok.Hercules.Consumers
 {
@@ -62,6 +63,9 @@ namespace Vostok.Hercules.Consumers
 
         [CanBeNull]
         public IMetricContext MetricContext { get; set; }
+
+        [CanBeNull]
+        public ITracer Tracer { get; set; }
 
         public int EventsReadBatchSize { get; set; } = ConsumersConstants.EventsReadBatchSize;
 

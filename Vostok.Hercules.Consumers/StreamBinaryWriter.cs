@@ -8,11 +8,13 @@ using Vostok.Commons.Helpers.Disposable;
 using Vostok.Commons.Helpers.Extensions;
 using Vostok.Hercules.Client.Abstractions.Results;
 using Vostok.Hercules.Client.Internal;
+using Vostok.Hercules.Consumers.Helpers;
 using Vostok.Logging.Abstractions;
 using Vostok.Logging.Context;
 using Vostok.Metrics.Grouping;
 using Vostok.Metrics.Primitives.Gauge;
 using Vostok.Metrics.Primitives.Timer;
+using Vostok.Tracing.Abstractions;
 
 namespace Vostok.Hercules.Consumers
 {
@@ -21,6 +23,7 @@ namespace Vostok.Hercules.Consumers
     {
         private readonly StreamBinaryWriterSettings settings;
         private readonly ILog log;
+        private readonly ITracer tracer;
         private readonly IMetricGroup1<IIntegerGauge> eventsMetric;
         private readonly IMetricGroup1<ITimer> iterationMetric;
         private readonly GateRequestSender client;
@@ -32,6 +35,7 @@ namespace Vostok.Hercules.Consumers
 
             var bufferPool = new BufferPool(settings.MaxPooledBufferSize, settings.MaxPooledBuffersPerBucket);
             client = new GateRequestSender(settings.GateCluster, log /*.WithErrorsTransformedToWarns()*/, bufferPool, settings.GateClientAdditionalSetup);
+            tracer = settings.Tracer ?? TracerProvider.Get();
 
             eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
             iterationMetric = settings.MetricContext?.CreateSummary("iteration", "type", new SummaryConfig {Quantiles = new[] {0.5, 0.75, 1}});
@@ -47,8 +51,12 @@ namespace Vostok.Hercules.Consumers
             }
 
             using (new OperationContextToken("WriteEvents"))
+            using (var traceBuilder = tracer.BeginConsumerCustomOperationSpan("Write"))
             using (iterationMetric?.For("write_time").Measure())
             {
+                traceBuilder.SetOperationDetails(eventsCount);
+                traceBuilder.SetStream(streamName);
+
                 InsertEventsResult result;
                 do
                 {

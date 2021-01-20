@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 using Vostok.Clusterclient.Core;
 using Vostok.Clusterclient.Core.Topology;
 using Vostok.Metrics;
+using Vostok.Tracing.Abstractions;
 
 namespace Vostok.Hercules.Consumers
 {
@@ -28,6 +29,9 @@ namespace Vostok.Hercules.Consumers
 
         [CanBeNull]
         public IMetricContext MetricContext { get; set; }
+
+        [CanBeNull]
+        public ITracer Tracer { get; set; }
 
         public int MaxPooledBufferSize { get; set; } = ConsumersConstants.MaxPooledBufferSize;
 

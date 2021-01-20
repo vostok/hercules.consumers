@@ -13,6 +13,7 @@ using Vostok.Metrics;
 using Vostok.Metrics.Grouping;
 using Vostok.Metrics.Primitives.Gauge;
 using Vostok.Metrics.Primitives.Timer;
+using Vostok.Tracing.Abstractions;
 
 // ReSharper disable ParameterHidesMember
 
@@ -23,6 +24,7 @@ namespace Vostok.Hercules.Consumers
     {
         private readonly WindowedStreamConsumerSettings<T, TKey> settings;
         private readonly ILog log;
+        private readonly ITracer tracer;
         private readonly IMetricGroup1<IIntegerGauge> stateMetric;
         private readonly Dictionary<TKey, Windows<T, TKey>> windows;
 
@@ -33,6 +35,7 @@ namespace Vostok.Hercules.Consumers
         {
             this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
             this.log = (log ?? LogProvider.Get()).ForContext<WindowedStreamConsumer<T, TKey>>();
+            tracer = settings.Tracer ?? TracerProvider.Get();
 
             windows = new Dictionary<TKey, Windows<T, TKey>>();
 
@@ -153,6 +156,7 @@ namespace Vostok.Hercules.Consumers
         private void FlushWindows()
         {
             using (new OperationContextToken("FlushEvents"))
+            using (var operationSpan = tracer.BeginConsumerCustomOperationSpan("FlushEvents"))
             using (iterationMetric?.For("flush_time").Measure())
             {
                 var result = new WindowsFlushResult();
@@ -179,6 +183,9 @@ namespace Vostok.Hercules.Consumers
                     windows.Count,
                     result.WindowsCount,
                     result.EventsCount);
+
+                operationSpan.SetOperationDetails(result.EventsCount);
+
                 stateMetric?.For("keys").Set(windows.Count);
                 stateMetric?.For("windows").Set(result.WindowsCount);
                 stateMetric?.For("events").Set(result.EventsCount);
