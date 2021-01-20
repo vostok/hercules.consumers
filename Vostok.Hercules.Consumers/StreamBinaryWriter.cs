@@ -56,7 +56,7 @@ namespace Vostok.Hercules.Consumers
             using (iterationMetric?.For("write_time").Measure())
             {
                 traceBuilder.SetOperationDetails(eventsCount);
-                traceBuilder.SetCustomAnnotation("streamName", streamName);
+                traceBuilder.SetStream(streamName);
                 
                 InsertEventsResult result;
                 do

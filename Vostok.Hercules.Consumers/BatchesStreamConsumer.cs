@@ -259,9 +259,9 @@ namespace Vostok.Hercules.Consumers
             using (var traceBuilder = tracer.BeginConsumerCustomOperationSpan("Read"))
             using (iterationMetric?.For("read_time").Measure())
             {
-                traceBuilder.SetCustomAnnotation("shardIndex", query.ClientShard.ToString());
-                traceBuilder.SetCustomAnnotation("streamName", settings.StreamName);
-                traceBuilder.SetCustomAnnotation("coordinates", query.Coordinates.ToString());
+                traceBuilder.SetShard(query.ClientShard, query.ClientShardCount);
+                traceBuilder.SetStream(settings.StreamName);
+                traceBuilder.SetCoordinates(query.Coordinates);
                 
                 log.Info(
                     "Reading {EventsCount} events from stream '{StreamName}'. " +
@@ -273,7 +273,6 @@ namespace Vostok.Hercules.Consumers
                     query.ClientShardCount,
                     query.Coordinates);
                 traceBuilder.SetOperationDetails(query.Limit);
-                
 
                 RawReadStreamResult readResult;
 
@@ -306,7 +305,7 @@ namespace Vostok.Hercules.Consumers
         // ReSharper disable once ParameterHidesMember
         protected private async Task<StreamCoordinates> SeekToEndAsync(StreamShardingSettings shardingSettings)
         {
-            var seekToEndQuery = new SeekToEndStreamQuery(settings.StreamName)
+            var query = new SeekToEndStreamQuery(settings.StreamName)
             {
                 ClientShard = shardingSettings.ClientShardIndex,
                 ClientShardCount = shardingSettings.ClientShardCount
@@ -317,7 +316,7 @@ namespace Vostok.Hercules.Consumers
             {
                 do
                 {
-                    result = await client.SeekToEndAsync(seekToEndQuery, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
+                    result = await client.SeekToEndAsync(query, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
 
                     if (!result.IsSuccessful)
                     {
@@ -331,8 +330,8 @@ namespace Vostok.Hercules.Consumers
                     }
                 } while (!result.IsSuccessful);
                 
-                spanBuilder.SetCustomAnnotation("streamName", seekToEndQuery.Name);
-                spanBuilder.SetCustomAnnotation("clientShard", seekToEndQuery.ClientShard.ToString());
+                spanBuilder.SetStream(query.Name);
+                spanBuilder.SetShard(query.ClientShard, query.ClientShardCount);
             }
 
             return result.Payload.Next;
