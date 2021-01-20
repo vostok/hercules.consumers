@@ -17,6 +17,7 @@ using Vostok.Metrics;
 using Vostok.Metrics.Grouping;
 using Vostok.Metrics.Primitives.Gauge;
 using Vostok.Metrics.Primitives.Timer;
+using Vostok.Tracing.Abstractions;
 using BinaryBufferReader = Vostok.Hercules.Client.Serialization.Readers.BinaryBufferReader;
 
 // ReSharper disable InconsistentNaming
@@ -30,6 +31,7 @@ namespace Vostok.Hercules.Consumers
         private readonly BatchesStreamConsumerSettings<T> settings;
         private readonly ILog log;
         private readonly StreamApiRequestSender client;
+        private readonly ITracer tracer;
 
         private StreamCoordinates coordinates;
 
@@ -45,6 +47,7 @@ namespace Vostok.Hercules.Consumers
         {
             this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
             this.log = log = (log ?? LogProvider.Get()).ForContext<BatchesStreamConsumer<T>>();
+            tracer = settings.Tracer ?? TracerProvider.Get();
 
             var bufferPool = new BufferPool(settings.MaxPooledBufferSize, settings.MaxPooledBuffersPerBucket);
             client = new StreamApiRequestSender(settings.StreamApiCluster, log /*.WithErrorsTransformedToWarns()*/, bufferPool, settings.StreamApiClientAdditionalSetup);
@@ -76,6 +79,7 @@ namespace Vostok.Hercules.Consumers
                     }
 
                     using (new OperationContextToken($"Iteration-{iteration++}"))
+                    using (tracer.BeginConsumerCustomOperationSpan("Iteration"))
                     using (iterationMetric?.For("time").Measure())
                     {
                         await MakeIteration().ConfigureAwait(false);
@@ -211,6 +215,7 @@ namespace Vostok.Hercules.Consumers
             int count;
 
             using (new OperationContextToken("HandleEvents"))
+            using (var operationSpan = tracer.BeginConsumerCustomOperationSpan("HandleEvents"))
             using (iterationMetric?.For("handle_time").Measure())
             {
                 // ReSharper disable once AssignNullToNotNullAttribute
@@ -239,6 +244,7 @@ namespace Vostok.Hercules.Consumers
                     }
                 }
 
+                operationSpan.SetOperationDetails(count);
                 LogProgress(count);
             }
 
@@ -249,8 +255,13 @@ namespace Vostok.Hercules.Consumers
         protected private async Task<RawReadStreamPayload> ReadAsync(ReadStreamQuery query)
         {
             using (new OperationContextToken("ReadEvents"))
+            using (var traceBuilder = tracer.BeginConsumerCustomOperationSpan("Read"))
             using (iterationMetric?.For("read_time").Measure())
             {
+                traceBuilder.SetShard(query.ClientShard, query.ClientShardCount);
+                traceBuilder.SetStream(settings.StreamName);
+                traceBuilder.SetCoordinates(query.Coordinates);
+
                 log.Info(
                     "Reading {EventsCount} events from stream '{StreamName}'. " +
                     "Sharding settings: shard with index {ShardIndex} from {ShardCount}. " +
@@ -260,12 +271,14 @@ namespace Vostok.Hercules.Consumers
                     query.ClientShard,
                     query.ClientShardCount,
                     query.Coordinates);
+                traceBuilder.SetOperationDetails(query.Limit);
 
                 RawReadStreamResult readResult;
 
                 do
                 {
                     readResult = await client.ReadAsync(query, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
+
                     if (!readResult.IsSuccessful)
                     {
                         log.Warn(
@@ -290,29 +303,34 @@ namespace Vostok.Hercules.Consumers
         // ReSharper disable once ParameterHidesMember
         protected private async Task<StreamCoordinates> SeekToEndAsync(StreamShardingSettings shardingSettings)
         {
-            var seekToEndQuery = new SeekToEndStreamQuery(settings.StreamName)
+            var query = new SeekToEndStreamQuery(settings.StreamName)
             {
                 ClientShard = shardingSettings.ClientShardIndex,
                 ClientShardCount = shardingSettings.ClientShardCount
             };
 
             SeekToEndStreamResult result;
-
-            do
+            using (var spanBuilder = tracer.BeginConsumerCustomOperationSpan("SeekToEnd"))
             {
-                result = await client.SeekToEndAsync(seekToEndQuery, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
-
-                if (!result.IsSuccessful)
+                do
                 {
-                    log.Warn(
-                        "Failed to seek to end for Hercules stream '{StreamName}'. " +
-                        "Status: {Status}. Error: '{Error}'.",
-                        settings.StreamName,
-                        result.Status,
-                        result.ErrorDetails);
-                    await DelayOnError().ConfigureAwait(false);
-                }
-            } while (!result.IsSuccessful);
+                    result = await client.SeekToEndAsync(query, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
+
+                    if (!result.IsSuccessful)
+                    {
+                        log.Warn(
+                            "Failed to seek to end for Hercules stream '{StreamName}'. " +
+                            "Status: {Status}. Error: '{Error}'.",
+                            settings.StreamName,
+                            result.Status,
+                            result.ErrorDetails);
+                        await DelayOnError().ConfigureAwait(false);
+                    }
+                } while (!result.IsSuccessful);
+
+                spanBuilder.SetStream(query.Name);
+                spanBuilder.SetShard(query.ClientShard, query.ClientShardCount);
+            }
 
             return result.Payload.Next;
         }

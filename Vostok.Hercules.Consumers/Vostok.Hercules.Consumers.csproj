@@ -60,5 +60,13 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\vostok.logging.context\Vostok.Logging.Context\bin\Release\netstandard2.0\Vostok.Logging.Context.dll</HintPath>
     </Reference>
+    <Reference Include="Vostok.Tracing.Extensions">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\vostok.tracing.extensions\Vostok.Tracing.Extensions\bin\Release\netstandard2.0\Vostok.Tracing.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="Vostok.Tracing.Abstractions">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\vostok.tracing.abstractions\Vostok.Tracing.Abstractions\bin\Release\netstandard2.0\Vostok.Tracing.Abstractions.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>
