@@ -1,3 +1,9 @@
+## 0.1.3 (20-01-2021):
+
+Trace operations with custom spans.
+
+More consumers templates.
+
 ## 0.1.2 (08-02-2020):
 
 Fix restart coordinates.
