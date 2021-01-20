@@ -18,7 +18,6 @@ using Vostok.Metrics.Grouping;
 using Vostok.Metrics.Primitives.Gauge;
 using Vostok.Metrics.Primitives.Timer;
 using Vostok.Tracing.Abstractions;
-using Vostok.Tracing.Extensions.Custom;
 using BinaryBufferReader = Vostok.Hercules.Client.Serialization.Readers.BinaryBufferReader;
 
 // ReSharper disable InconsistentNaming
@@ -244,7 +243,7 @@ namespace Vostok.Hercules.Consumers
                         EventsBinaryReader.ReadEvent(reader, DummyEventBuilder.Instance);
                     }
                 }
-                
+
                 operationSpan.SetOperationDetails(count);
                 LogProgress(count);
             }
@@ -262,7 +261,7 @@ namespace Vostok.Hercules.Consumers
                 traceBuilder.SetShard(query.ClientShard, query.ClientShardCount);
                 traceBuilder.SetStream(settings.StreamName);
                 traceBuilder.SetCoordinates(query.Coordinates);
-                
+
                 log.Info(
                     "Reading {EventsCount} events from stream '{StreamName}'. " +
                     "Sharding settings: shard with index {ShardIndex} from {ShardCount}. " +
@@ -279,7 +278,7 @@ namespace Vostok.Hercules.Consumers
                 do
                 {
                     readResult = await client.ReadAsync(query, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
-                 
+
                     if (!readResult.IsSuccessful)
                     {
                         log.Warn(
@@ -290,7 +289,6 @@ namespace Vostok.Hercules.Consumers
                             readResult.ErrorDetails);
                         await DelayOnError().ConfigureAwait(false);
                     }
-                    
                 } while (!readResult.IsSuccessful);
 
                 log.Info(
@@ -329,7 +327,7 @@ namespace Vostok.Hercules.Consumers
                         await DelayOnError().ConfigureAwait(false);
                     }
                 } while (!result.IsSuccessful);
-                
+
                 spanBuilder.SetStream(query.Name);
                 spanBuilder.SetShard(query.ClientShard, query.ClientShardCount);
             }

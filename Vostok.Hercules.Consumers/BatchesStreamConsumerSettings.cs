@@ -63,7 +63,7 @@ namespace Vostok.Hercules.Consumers
 
         [CanBeNull]
         public IMetricContext MetricContext { get; set; }
-        
+
         [CanBeNull]
         public ITracer Tracer { get; set; }
 

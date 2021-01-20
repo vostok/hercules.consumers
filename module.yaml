@@ -9,7 +9,7 @@ notests *default:
     - Vostok.Hercules.Consumers/bin/Release/netstandard2.0/Vostok.Hercules.Consumers.dll
 
   deps:
-    - vostok.tracing.extensions@custom_spans_extensions
+    - vostok.tracing.extensions
     - vostok.tracing.abstractions
     - vostok.logging.context
     - vostok.clusterclient.transport
