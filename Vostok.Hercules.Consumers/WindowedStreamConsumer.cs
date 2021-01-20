@@ -156,7 +156,7 @@ namespace Vostok.Hercules.Consumers
         private void FlushWindows()
         {
             using (new OperationContextToken("FlushEvents"))
-            using (var operationSpan = tracer.BeginConsumerCustomOperationSpan("FlushEvents"))    
+            using (var operationSpan = tracer.BeginConsumerCustomOperationSpan("FlushEvents"))
             using (iterationMetric?.For("flush_time").Measure())
             {
                 var result = new WindowsFlushResult();
@@ -183,9 +183,9 @@ namespace Vostok.Hercules.Consumers
                     windows.Count,
                     result.WindowsCount,
                     result.EventsCount);
-                
+
                 operationSpan.SetOperationDetails(result.EventsCount);
-                
+
                 stateMetric?.For("keys").Set(windows.Count);
                 stateMetric?.For("windows").Set(result.WindowsCount);
                 stateMetric?.For("events").Set(result.EventsCount);

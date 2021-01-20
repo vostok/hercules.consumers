@@ -32,7 +32,6 @@ namespace Vostok.Hercules.Consumers
         {
             this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
             this.log = log = (log ?? LogProvider.Get()).ForContext<StreamBinaryWriter>();
-            
 
             var bufferPool = new BufferPool(settings.MaxPooledBufferSize, settings.MaxPooledBuffersPerBucket);
             client = new GateRequestSender(settings.GateCluster, log /*.WithErrorsTransformedToWarns()*/, bufferPool, settings.GateClientAdditionalSetup);
@@ -50,18 +49,17 @@ namespace Vostok.Hercules.Consumers
                 LogProgress(streamName, 0);
                 return;
             }
-            
+
             using (new OperationContextToken("WriteEvents"))
-            using (var traceBuilder = tracer.BeginConsumerCustomOperationSpan("Write"))    
+            using (var traceBuilder = tracer.BeginConsumerCustomOperationSpan("Write"))
             using (iterationMetric?.For("write_time").Measure())
             {
                 traceBuilder.SetOperationDetails(eventsCount);
                 traceBuilder.SetStream(streamName);
-                
+
                 InsertEventsResult result;
                 do
                 {
-
                     result = await client.SendAsync(
                             streamName,
                             settings.ApiKeyProvider(),
@@ -80,7 +78,6 @@ namespace Vostok.Hercules.Consumers
                             result.ErrorDetails);
                         await DelayOnError().ConfigureAwait(false);
                     }
-                    
                 } while (!result.IsSuccessful);
 
                 LogProgress(streamName, eventsCount);
