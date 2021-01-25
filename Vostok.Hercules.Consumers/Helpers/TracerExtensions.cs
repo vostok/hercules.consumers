@@ -10,7 +10,6 @@ namespace Vostok.Hercules.Consumers.Helpers
         {
             var spanBuilder = tracer.BeginCustomOperationSpan(operationName);
             spanBuilder.SetOperationStatus(null, WellKnownStatuses.Success);
-            spanBuilder.SetTargetDetails("Hercules.Consumers", "default");
             spanBuilder.SetAnnotation(WellKnownAnnotations.Common.Component, "Hercules.Consumers");
             return spanBuilder;
         }

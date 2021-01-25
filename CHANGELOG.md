@@ -1,3 +1,7 @@
+## 0.1.4 (25-01-2021):
+
+Fixed custom spans.
+
 ## 0.1.3 (20-01-2021):
 
 Trace operations with custom spans.
