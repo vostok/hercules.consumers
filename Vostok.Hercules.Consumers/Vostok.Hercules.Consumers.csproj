@@ -26,6 +26,8 @@
   <ItemGroup>
     <Compile Include="..\..\vostok.commons.time\Vostok.Commons.Time\PreciseDateTime.cs" Link="Commons\PreciseDateTime.cs" />
     <Compile Include="..\..\vostok.commons.time\Vostok.Commons.Time\TimeSpanArithmetics.cs" Link="Commons\TimeSpanArithmetics.cs" />
+    <Compile Include="..\..\vostok.commons.threading\Vostok.Commons.Threading\GuidGenerator.cs" Link="Commons\GuidGenerator.cs" />
+    <Compile Include="..\..\vostok.commons.threading\Vostok.Commons.Threading\ThreadSafeRandom.cs" Link="Commons\ThreadSafeRandom.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Vostok.Hercules.Client.Abstractions">
