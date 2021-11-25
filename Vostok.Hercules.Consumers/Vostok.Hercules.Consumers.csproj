@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\vostok.devtools\library-common-props\Main-Project.props" />
   <Import Project="..\..\vostok.devtools\git-commit-to-assembly-title\Vostok.Tools.GitCommit2AssemblyTitle.props" />
-  <Import Project="..\..\vostok.hercules.client\HerculesInternal.props" />
+  <Import Project="..\..\vostok.hercules.client\HerculesInternal.props" Condition="Exists('..\..\vostok.hercules.client\HerculesInternal.props')" />
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Configurations>Debug;Release</Configurations>
