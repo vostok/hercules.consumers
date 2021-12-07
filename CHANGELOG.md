@@ -1,3 +1,7 @@
+## 0.1.6 (06-12-2021):
+
+Added `net6.0` target.
+
 ## 0.1.5 (25-11-2021):
 
 Logging improvements.
