@@ -62,7 +62,10 @@ namespace Vostok.Hercules.Consumers
         public ClusterClientSetup StreamApiClientAdditionalSetup { get; set; }
 
         [CanBeNull]
-        public IMetricContext MetricContext { get; set; }
+        public IMetricContext ApplicationMetricContext { get; set; }
+
+        [CanBeNull]
+        public IMetricContext InstanceMetricContext { get; set; }
 
         [CanBeNull]
         public ITracer Tracer { get; set; }

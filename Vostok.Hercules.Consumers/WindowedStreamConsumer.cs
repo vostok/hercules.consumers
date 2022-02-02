@@ -26,8 +26,8 @@ namespace Vostok.Hercules.Consumers
         private readonly ILog log;
         private readonly ITracer tracer;
         private readonly IMetricGroup1<IIntegerGauge> stateMetric;
+        private readonly ITimer eventLagMetric;
         private readonly Dictionary<TKey, Windows<T, TKey>> windows;
-
         private volatile StreamCoordinates leftCoordinates;
 
         public WindowedStreamConsumer([NotNull] WindowedStreamConsumerSettings<T, TKey> settings, [CanBeNull] ILog log)
@@ -38,6 +38,12 @@ namespace Vostok.Hercules.Consumers
             tracer = settings.Tracer ?? TracerProvider.Get();
 
             windows = new Dictionary<TKey, Windows<T, TKey>>();
+
+            var applicationMetricContext = settings.ApplicationMetricContext ?? new DevNullMetricContext();
+            eventLagMetric = applicationMetricContext.CreateHistogram("eventLag", new HistogramConfig {Buckets = HistogramHelper.CreateDefaultBuckets(), Unit = WellKnownUnits.Milliseconds});
+
+            var instanceMetricContext = settings.InstanceMetricContext ?? new DevNullMetricContext();
+            stateMetric = instanceMetricContext.CreateIntegerGauge("state", "type");
 
             var settingsOnBatchEnd = settings.OnBatchEnd;
             settings.OnBatchEnd = c =>
@@ -60,9 +66,6 @@ namespace Vostok.Hercules.Consumers
                 Restart(c).GetAwaiter().GetResult();
                 settingsOnRestart?.Invoke(c);
             };
-
-            var metricContext = settings.MetricContext ?? new DevNullMetricContext();
-            stateMetric = metricContext.CreateIntegerGauge("state", "type");
         }
 
         private async Task Restart(StreamCoordinates rightCoordinates)
@@ -147,6 +150,10 @@ namespace Vostok.Hercules.Consumers
         private void AddEvent(T @event, StreamCoordinates queryCoordinates)
         {
             var key = settings.KeyProvider(@event);
+
+            var lag = DateTime.Now - settings.TimestampProvider(@event);
+            eventLagMetric.Report(lag);
+
             if (!windows.ContainsKey(key))
                 windows[key] = new Windows<T, TKey>(key, settings);
             if (!windows[key].AddEvent(@event, queryCoordinates) && !restart)
