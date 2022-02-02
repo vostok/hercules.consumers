@@ -52,11 +52,11 @@ namespace Vostok.Hercules.Consumers
             var bufferPool = new BufferPool(settings.MaxPooledBufferSize, settings.MaxPooledBuffersPerBucket);
             client = new StreamApiRequestSender(settings.StreamApiCluster, log /*.WithErrorsTransformedToWarns()*/, bufferPool, settings.StreamApiClientAdditionalSetup);
 
-            var metricContext = settings.MetricContext ?? new DevNullMetricContext();
-            eventsMetric = metricContext.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
-            iterationMetric = metricContext.CreateSummary("iteration", "type", new SummaryConfig {Quantiles = new[] {0.5, 0.75, 1}});
-            metricContext.CreateFuncGauge("events", "type").For("remaining").SetValueProvider(() => CountStreamRemainingEvents());
-            metricContext.CreateFuncGauge("buffer", "type").For("rented_reader").SetValueProvider(() => BufferPool.Rented);
+            var instanceMetricContext = settings.InstanceMetricContext ?? new DevNullMetricContext();
+            eventsMetric = instanceMetricContext.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
+            iterationMetric = instanceMetricContext.CreateSummary("iteration", "type", new SummaryConfig {Quantiles = new[] {0.5, 0.75, 1}});
+            instanceMetricContext.CreateFuncGauge("events", "type").For("remaining").SetValueProvider(() => CountStreamRemainingEvents());
+            instanceMetricContext.CreateFuncGauge("buffer", "type").For("rented_reader").SetValueProvider(() => BufferPool.Rented);
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)
