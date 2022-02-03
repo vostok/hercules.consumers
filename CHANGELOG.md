@@ -1,3 +1,7 @@
+## 0.1.8 (03-02-2022):
+
+Changed `MetricContext` in `BatchesStreamConsumer` to `InstanceMetricContext`. Added `ApplicationMetricContext` and a new metric to `WindowedStreamConsumer`.
+
 ## 0.1.7 (06-12-2021):
 
 Added `net6.0` target.
