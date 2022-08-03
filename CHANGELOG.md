@@ -1,3 +1,7 @@
+## 0.1.9 (03-08-2022):
+
+Added `OnEventDrop` callback for `WindowedStreamConsumer`.
+
 ## 0.1.8 (03-02-2022):
 
 Changed `MetricContext` in `BatchesStreamConsumer` to `InstanceMetricContext`. Added `ApplicationMetricContext` and a new metric to `WindowedStreamConsumer`.
