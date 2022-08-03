@@ -53,6 +53,9 @@ namespace Vostok.Hercules.Consumers
         public Func<T, TimeSpan?> PeriodProvider { get; set; }
         [CanBeNull]
         public Func<T, TimeSpan?> LagProvider { get; set; }
+        
+        [CanBeNull]
+        public Action<T> OnEventDrop { get; set; }
 
         public TimeSpan MaximumAllowedPeriod { get; set; } = 1.Minutes();
         public TimeSpan MaximumAllowedLag { get; set; } = 1.Minutes();
