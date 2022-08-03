@@ -1,2 +1,0 @@
-Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.OnEventDrop.get -> System.Action<T>
-Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.OnEventDrop.set -> void

@@ -1,4 +1,4 @@
-override Vostok.Hercules.Consumers.StreamShardingSettings.Equals(object obj) -> bool
+﻿override Vostok.Hercules.Consumers.StreamShardingSettings.Equals(object obj) -> bool
 override Vostok.Hercules.Consumers.StreamShardingSettings.GetHashCode() -> int
 static readonly Vostok.Hercules.Consumers.ConsumersConstants.DelayOnError -> System.TimeSpan
 static readonly Vostok.Hercules.Consumers.ConsumersConstants.DelayOnNoEvents -> System.TimeSpan
@@ -247,6 +247,8 @@ Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.MaximumDeltaAf
 Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.MaximumDeltaAfterNow.set -> void
 Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.MaximumDeltaBeforeNow.get -> System.TimeSpan
 Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.MaximumDeltaBeforeNow.set -> void
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.OnEventDrop.get -> System.Action<T>
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.OnEventDrop.set -> void
 Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.Period.get -> System.TimeSpan
 Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.Period.set -> void
 Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.PeriodProvider.get -> System.Func<T, System.TimeSpan?>
