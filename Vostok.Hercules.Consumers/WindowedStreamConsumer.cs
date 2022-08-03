@@ -157,7 +157,10 @@ namespace Vostok.Hercules.Consumers
             if (!windows.ContainsKey(key))
                 windows[key] = new Windows<T, TKey>(key, settings);
             if (!windows[key].AddEvent(@event, queryCoordinates) && !restart)
+            {
+                settings.OnEventDrop?.Invoke(@event);
                 eventsMetric?.For("dropped").Increment();
+            }
         }
 
         private void FlushWindows()
