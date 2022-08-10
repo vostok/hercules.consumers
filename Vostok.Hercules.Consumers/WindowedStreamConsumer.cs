@@ -133,6 +133,8 @@ namespace Vostok.Hercules.Consumers
             }
             
             FlushWindows();
+            
+            LogCoordinates("Restarted", leftCoordinates, rightCoordinates);
         }
 
         private async Task<long> RestartPartition(int partition, int partitionsCount, long start, long end)
