@@ -48,6 +48,9 @@ namespace Vostok.Hercules.Consumers
 
         [CanBeNull]
         public Action<StreamCoordinates> OnRestart { get; set; }
+        
+        [CanBeNull]
+        public Action<StreamCoordinates> OnStop { get; set; }
 
         [NotNull]
         public Func<IBinaryBufferReader, IHerculesEventBuilder<T>> EventBuilderProvider { get; }
