@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Vostok.Commons.Time;
 using Vostok.Hercules.Client.Abstractions.Models;
 
@@ -84,5 +85,8 @@ namespace Vostok.Hercules.Consumers.Helpers
             var result = new Window<T, TKey>(settings.CreateWindow(key), coordinates, start, start + period, period, lag);
             return result;
         }
+
+        public override string ToString() =>
+            $"{nameof(LastEventAdded)}: {LastEventAdded}, {nameof(key)}: {key}, {nameof(minimumAllowedTimestamp)}: {minimumAllowedTimestamp}, {nameof(maximumObservedTimestamp)}: {maximumObservedTimestamp} {nameof(windows)}:\n{string.Join("\n", windows.Select(w => w.ToString()))}";
     }
 }

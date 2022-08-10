@@ -79,6 +79,7 @@ namespace Vostok.Hercules.Consumers
         {
             await settings.LeftCoordinatesStorage.AdvanceAsync(leftCoordinates).ConfigureAwait(false);
             LogCoordinates("Stop", leftCoordinates, rightCoordinates);
+            LogWindows();
         }
 
         private async Task Restart(StreamCoordinates rightCoordinates)
@@ -135,6 +136,7 @@ namespace Vostok.Hercules.Consumers
             FlushWindows();
             
             LogCoordinates("Restarted", leftCoordinates, rightCoordinates);
+            LogWindows();
         }
 
         private async Task<long> RestartPartition(int partition, int partitionsCount, long start, long end)
@@ -228,5 +230,8 @@ namespace Vostok.Hercules.Consumers
             LogCoordinates(message + " left", left);
             LogCoordinates(message + " right", right);
         }
+        
+        private void LogWindows() =>
+            log.Info("Windows: {{Windows}}.", windows.ToString());
     }
 }

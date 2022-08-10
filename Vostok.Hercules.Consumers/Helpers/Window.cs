@@ -55,5 +55,8 @@ namespace Vostok.Hercules.Consumers.Helpers
 
         public void Flush() =>
             implementation.Flush(End);
+
+        public override string ToString() =>
+            $"{nameof(FirstEventCoordinates)}: {FirstEventCoordinates}, {nameof(Start)}: {Start}, {nameof(End)}: {End}, {nameof(period)}: {period}, {nameof(lag)}: {lag}, {nameof(lastEventAdded)}: {lastEventAdded}, {nameof(EventsCount)}: {EventsCount}";
     }
 }
