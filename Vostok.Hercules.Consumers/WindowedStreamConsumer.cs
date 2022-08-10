@@ -232,6 +232,6 @@ namespace Vostok.Hercules.Consumers
         }
         
         private void LogWindows() =>
-            log.Info("Windows:\n{{Windows}}.", string.Join("\n", windows.Values));
+            log.Info("Windows:\n{Windows}", windows);
     }
 }
