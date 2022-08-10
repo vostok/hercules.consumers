@@ -77,7 +77,7 @@ namespace Vostok.Hercules.Consumers
 
         private async Task Stop(StreamCoordinates rightCoordinates)
         {
-            await settings.LeftCoordinatesStorage.AdvanceAsync(leftCoordinates);
+            await settings.LeftCoordinatesStorage.AdvanceAsync(leftCoordinates).ConfigureAwait(false);
             LogCoordinates("Stop", leftCoordinates, rightCoordinates);
         }
 

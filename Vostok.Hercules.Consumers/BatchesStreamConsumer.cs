@@ -95,7 +95,7 @@ namespace Vostok.Hercules.Consumers
                 }
             }
 
-            await settings.CoordinatesStorage.AdvanceAsync(coordinates);
+            await settings.CoordinatesStorage.AdvanceAsync(coordinates).ConfigureAwait(false);
             log.Info("Final coordinates: {StreamCoordinates}.", coordinates);
             settings.OnStop?.Invoke(coordinates);
         }
