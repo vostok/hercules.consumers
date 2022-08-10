@@ -37,7 +37,6 @@ namespace Vostok.Hercules.Consumers
 
         private volatile int iteration;
         private volatile Task<RawReadStreamPayload> readTask;
-        private volatile Task saveCoordinatesTask;
         protected private readonly IMetricGroup1<IIntegerGauge> eventsMetric;
         protected private readonly IMetricGroup1<ITimer> iterationMetric;
         protected private StreamShardingSettings shardingSettings;
@@ -55,7 +54,7 @@ namespace Vostok.Hercules.Consumers
             var instanceMetricContext = settings.InstanceMetricContext ?? new DevNullMetricContext();
             eventsMetric = instanceMetricContext.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
             iterationMetric = instanceMetricContext.CreateSummary("iteration", "type", new SummaryConfig {Quantiles = new[] {0.5, 0.75, 1}});
-            instanceMetricContext.CreateFuncGauge("events", "type").For("remaining").SetValueProvider(() => CountStreamRemainingEvents());
+            instanceMetricContext.CreateFuncGauge("events", "type").For("remaining").SetValueProvider(CountStreamRemainingEvents);
             instanceMetricContext.CreateFuncGauge("buffer", "type").For("rented_reader").SetValueProvider(() => BufferPool.Rented);
         }
 
@@ -96,8 +95,9 @@ namespace Vostok.Hercules.Consumers
                 }
             }
 
-            await (saveCoordinatesTask ?? Task.CompletedTask).ConfigureAwait(false);
+            await settings.CoordinatesStorage.AdvanceAsync(coordinates);
             log.Info("Final coordinates: {StreamCoordinates}.", coordinates);
+            settings.OnStop?.Invoke(coordinates);
         }
 
         protected void LogCoordinates(string message, StreamCoordinates streamCoordinates) =>
@@ -154,7 +154,7 @@ namespace Vostok.Hercules.Consumers
 
                 settings.OnBatchEnd?.Invoke(coordinates);
 
-                saveCoordinatesTask = settings.CoordinatesStorage.AdvanceAsync(coordinates);
+                settings.CoordinatesStorage.AdvanceAsync(coordinates);
             }
             finally
             {
