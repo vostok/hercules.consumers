@@ -98,7 +98,8 @@ namespace Vostok.Hercules.Consumers
 
         private async Task RestartCoordinates(StreamCoordinates rightCoordinates)
         {
-            await settings.LeftCoordinatesStorage.AdvanceAsync(leftCoordinates).ConfigureAwait(false);
+            if (leftCoordinates != null)
+                await settings.LeftCoordinatesStorage.AdvanceAsync(leftCoordinates).ConfigureAwait(false);
             
             var storageCoordinates = await settings.LeftCoordinatesStorage.GetCurrentAsync().ConfigureAwait(false);
             storageCoordinates = storageCoordinates.FilterBy(rightCoordinates);
