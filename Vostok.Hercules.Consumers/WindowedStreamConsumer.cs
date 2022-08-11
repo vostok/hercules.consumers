@@ -49,7 +49,7 @@ namespace Vostok.Hercules.Consumers
             settings.OnBatchEnd = c =>
             {
                 FlushWindows();
-                settings.LeftCoordinatesStorage.AdvanceAsync(leftCoordinates);
+                Task.Run(() => settings.LeftCoordinatesStorage.AdvanceAsync(leftCoordinates));
                 settingsOnBatchEnd?.Invoke(c);
             };
 
@@ -77,7 +77,8 @@ namespace Vostok.Hercules.Consumers
 
         private async Task Stop(StreamCoordinates rightCoordinates)
         {
-            await settings.LeftCoordinatesStorage.AdvanceAsync(leftCoordinates).ConfigureAwait(false);
+            if (leftCoordinates != null)
+                await settings.LeftCoordinatesStorage.AdvanceAsync(leftCoordinates).ConfigureAwait(false);
             LogCoordinates("Stop", leftCoordinates, rightCoordinates);
         }
 
