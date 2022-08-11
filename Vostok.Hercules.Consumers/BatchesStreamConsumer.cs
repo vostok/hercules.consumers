@@ -119,7 +119,8 @@ namespace Vostok.Hercules.Consumers
         {
             LogShardingSettings();
             
-            await settings.CoordinatesStorage.AdvanceAsync(coordinates).ConfigureAwait(false);
+            if (coordinates != null)
+                await settings.CoordinatesStorage.AdvanceAsync(coordinates).ConfigureAwait(false);
             LogCoordinates("Current", coordinates);
 
             var endCoordinates = await SeekToEndAsync(shardingSettings).ConfigureAwait(false);
