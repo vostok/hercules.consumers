@@ -66,6 +66,19 @@ namespace Vostok.Hercules.Consumers
                 Restart(c).GetAwaiter().GetResult();
                 settingsOnRestart?.Invoke(c);
             };
+            
+            var settingsOnStop = settings.OnStop;
+            settings.OnStop = c =>
+            {
+                Stop(c).GetAwaiter().GetResult();
+                settingsOnStop?.Invoke(c);
+            };
+        }
+
+        private async Task Stop(StreamCoordinates rightCoordinates)
+        {
+            await settings.LeftCoordinatesStorage.AdvanceAsync(leftCoordinates).ConfigureAwait(false);
+            LogCoordinates("Stop", leftCoordinates, rightCoordinates);
         }
 
         private async Task Restart(StreamCoordinates rightCoordinates)
@@ -118,6 +131,10 @@ namespace Vostok.Hercules.Consumers
                     start = await RestartPartition(position.Partition, partitionsCount, start, end).ConfigureAwait(false);
                 }
             }
+            
+            FlushWindows();
+            
+            LogCoordinates("Restarted", leftCoordinates, rightCoordinates);
         }
 
         private async Task<long> RestartPartition(int partition, int partitionsCount, long start, long end)

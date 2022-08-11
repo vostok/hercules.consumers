@@ -1,0 +1,2 @@
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnStop.get -> System.Action<Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates>
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnStop.set -> void
