@@ -123,6 +123,7 @@ namespace Vostok.Hercules.Consumers
             {
                 base.Reset();
                 EventsCount = 0;
+                WritingStarted = null;
             }
         }
     }
