@@ -1,3 +1,7 @@
+## 0.1.10 (15-09-2022):
+
+Save final `WindowedStreamConsumer` coordinates.
+
 ## 0.1.9 (03-08-2022):
 
 Added `OnEventDrop` callback for `WindowedStreamConsumer`.
