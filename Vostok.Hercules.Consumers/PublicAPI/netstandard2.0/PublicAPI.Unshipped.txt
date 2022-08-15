@@ -6,3 +6,5 @@
 *REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.StreamBinaryEventsWriterSettings(Vostok.Hercules.Consumers.StreamBinaryWriter streamBinaryWriter, string streamName) -> void
 *REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.StreamBinaryWriter.get -> Vostok.Hercules.Consumers.StreamBinaryWriter
 *REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.StreamName.get -> string
+*REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.BufferCapacityLimit.get -> int
+*REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.BufferCapacityLimit.set -> void

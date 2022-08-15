@@ -14,3 +14,5 @@ Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.WritersPoolCapacity.s
 *REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriter.WriteAsync() -> System.Threading.Tasks.Task
 *REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.BufferCapacityLimit.get -> int
 *REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.BufferCapacityLimit.set -> void
+*REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.BufferCapacityLimit.get -> int
+*REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.BufferCapacityLimit.set -> void
