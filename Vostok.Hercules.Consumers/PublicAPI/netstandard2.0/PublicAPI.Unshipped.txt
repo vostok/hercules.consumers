@@ -1,5 +1,3 @@
-Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnStop.get -> System.Action<Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates>
-Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnStop.set -> void
 *REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriter
 *REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriter.Put(System.Action<Vostok.Hercules.Client.Abstractions.Events.IHerculesEventBuilder> buildEvent) -> void
 *REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriter.StreamBinaryEventsWriter(Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings settings, Vostok.Logging.Abstractions.ILog log) -> void
