@@ -54,6 +54,8 @@ Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnEvent.get -> System
 Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnEvent.set -> void
 Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnRestart.get -> System.Action<Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates>
 Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnRestart.set -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnStop.get -> System.Action<Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates>
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnStop.set -> void
 Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.ShardingSettingsProvider.get -> System.Func<Vostok.Hercules.Consumers.StreamShardingSettings>
 Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.StreamApiClientAdditionalSetup.get -> Vostok.Clusterclient.Core.ClusterClientSetup
 Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.StreamApiClientAdditionalSetup.set -> void
