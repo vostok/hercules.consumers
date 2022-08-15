@@ -67,8 +67,11 @@ namespace Vostok.Hercules.Consumers
             buildEvent(eventBuilder);
         }
 
-        public Task FlushAsync() =>
-            FlushWriter(writer);
+        public async Task FlushAsync()
+        {
+            await FlushWriter(writer);
+            writer = ObtainEmptyWriter();
+        }
 
         private Writer ObtainEmptyWriter()
         {
