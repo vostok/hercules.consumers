@@ -67,6 +67,7 @@ namespace Vostok.Hercules.Consumers
             buildEvent(eventBuilder);
         }
 
+        // note (kungurtsev, 15.08.2022): do not call concurrently with Put
         public async Task FlushAsync()
         {
             await FlushWriter(writer);
