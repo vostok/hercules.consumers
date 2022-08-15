@@ -1,0 +1,10 @@
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnStop.get -> System.Action<Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates>
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnStop.set -> void
+*REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriter
+*REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriter.Put(System.Action<Vostok.Hercules.Client.Abstractions.Events.IHerculesEventBuilder> buildEvent) -> void
+*REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriter.StreamBinaryEventsWriter(Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings settings, Vostok.Logging.Abstractions.ILog log) -> void
+*REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriter.WriteAsync() -> System.Threading.Tasks.Task
+*REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings
+*REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.StreamBinaryEventsWriterSettings(Vostok.Hercules.Consumers.StreamBinaryWriter streamBinaryWriter, string streamName) -> void
+*REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.StreamBinaryWriter.get -> Vostok.Hercules.Consumers.StreamBinaryWriter
+*REMOVED*Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.StreamName.get -> string
