@@ -78,16 +78,6 @@ Vostok.Hercules.Consumers.IStreamEventsHandler
 Vostok.Hercules.Consumers.IStreamEventsHandler.HandleAsync(Vostok.Hercules.Client.Abstractions.Queries.ReadStreamQuery query, Vostok.Hercules.Client.Abstractions.Results.ReadStreamResult streamResult, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
 Vostok.Hercules.Consumers.IStreamEventsHandler<T>
 Vostok.Hercules.Consumers.IStreamEventsHandler<T>.HandleAsync(Vostok.Hercules.Client.Abstractions.Queries.ReadStreamQuery query, Vostok.Hercules.Client.Abstractions.Results.ReadStreamResult<T> streamResult, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
-Vostok.Hercules.Consumers.StreamBinaryEventsWriter
-Vostok.Hercules.Consumers.StreamBinaryEventsWriter.Put(System.Action<Vostok.Hercules.Client.Abstractions.Events.IHerculesEventBuilder> buildEvent) -> void
-Vostok.Hercules.Consumers.StreamBinaryEventsWriter.StreamBinaryEventsWriter(Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings settings, Vostok.Logging.Abstractions.ILog log) -> void
-Vostok.Hercules.Consumers.StreamBinaryEventsWriter.WriteAsync() -> System.Threading.Tasks.Task
-Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings
-Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.BufferCapacityLimit.get -> int
-Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.BufferCapacityLimit.set -> void
-Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.StreamBinaryEventsWriterSettings(Vostok.Hercules.Consumers.StreamBinaryWriter streamBinaryWriter, string streamName) -> void
-Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.StreamBinaryWriter.get -> Vostok.Hercules.Consumers.StreamBinaryWriter
-Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.StreamName.get -> string
 Vostok.Hercules.Consumers.StreamBinaryWriter
 Vostok.Hercules.Consumers.StreamBinaryWriter.StreamBinaryWriter(Vostok.Hercules.Consumers.StreamBinaryWriterSettings settings, Vostok.Logging.Abstractions.ILog log) -> void
 Vostok.Hercules.Consumers.StreamBinaryWriter.WriteAsync(string streamName, System.ArraySegment<byte> bytes, int eventsCount) -> System.Threading.Tasks.Task
