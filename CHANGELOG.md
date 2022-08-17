@@ -1,4 +1,8 @@
-## 0.1.10 (15-09-2022):
+## 1.0.1 (17-08-2022):
+
+Made `StreamBinaryEventsWriter` asynchronous and parallel.
+
+## 0.1.10 (15-08-2022):
 
 Save final `WindowedStreamConsumer` coordinates.
 
