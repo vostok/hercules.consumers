@@ -15,7 +15,7 @@ notests *default:
     - vostok.tracing.abstractions
     - vostok.logging.context
     - vostok.clusterclient.transport
-    - vostok.hercules.client
+    - vostok.hercules.client@custom-metrics
     - vostok.clusterclient.core
     - vostok.metrics
     - vostok.devtools
