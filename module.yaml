@@ -20,7 +20,7 @@ notests *default:
     - vostok.metrics
     - vostok.devtools
     - vostok.logging.abstractions
-    - vostok.hercules.client.abstractions
+    - vostok.hercules.client.abstractions@custom-metrics
     - vostok.zookeeper.client.abstractions
     - vostok.commons.helpers/src
     - vostok.commons.time/src
