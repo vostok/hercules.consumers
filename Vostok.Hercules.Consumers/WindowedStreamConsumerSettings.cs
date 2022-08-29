@@ -16,7 +16,7 @@ namespace Vostok.Hercules.Consumers
             [NotNull] Func<T, TKey> keyProvider,
             [NotNull] Func<T, DateTimeOffset> timestampProvider,
             [NotNull] Func<TKey, IWindow> createWindow,
-            [NotNull] Func<IBinaryBufferReader, IHerculesEventBuilder<T>> eventBuilderProvider,
+            [NotNull] Func<IBinaryEventsReader, IHerculesEventBuilder<T>> eventBuilderProvider,
             [NotNull] IStreamCoordinatesStorage leftCoordinatesStorage,
             [NotNull] IStreamCoordinatesStorage rightCoordinatesStorage,
             [NotNull] Func<StreamShardingSettings> shardingSettingsProvider)
