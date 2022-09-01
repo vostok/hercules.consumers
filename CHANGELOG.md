@@ -1,3 +1,7 @@
+## 2.0.1 (01-09-2022):
+
+Use `IBinaryEventsReader` instead of `IBinaryBufferReader` in event consumers.
+
 ## 1.0.1 (17-08-2022):
 
 Made `StreamBinaryEventsWriter` asynchronous and parallel.
