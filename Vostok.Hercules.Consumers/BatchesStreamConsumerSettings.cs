@@ -16,7 +16,7 @@ namespace Vostok.Hercules.Consumers
             [NotNull] string streamName,
             [NotNull] Func<string> apiKeyProvider,
             [NotNull] IClusterProvider streamApiCluster,
-            [NotNull] Func<IBinaryBufferReader, IHerculesEventBuilder<T>> eventBuilderProvider,
+            [NotNull] Func<IBinaryEventsReader, IHerculesEventBuilder<T>> eventBuilderProvider,
             [NotNull] IStreamCoordinatesStorage coordinatesStorage,
             [NotNull] Func<StreamShardingSettings> shardingSettingsProvider)
         {
@@ -53,7 +53,7 @@ namespace Vostok.Hercules.Consumers
         public Action<StreamCoordinates> OnStop { get; set; }
 
         [NotNull]
-        public Func<IBinaryBufferReader, IHerculesEventBuilder<T>> EventBuilderProvider { get; }
+        public Func<IBinaryEventsReader, IHerculesEventBuilder<T>> EventBuilderProvider { get; }
 
         [NotNull]
         public IStreamCoordinatesStorage CoordinatesStorage { get; }
