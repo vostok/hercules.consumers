@@ -49,7 +49,7 @@ namespace Vostok.Hercules.Consumers
             tracer = settings.Tracer ?? TracerProvider.Get();
 
             var bufferPool = new BufferPool(settings.MaxPooledBufferSize, settings.MaxPooledBuffersPerBucket);
-            client = new StreamApiRequestSender(settings.StreamApiCluster, log /*.WithErrorsTransformedToWarns()*/, bufferPool, settings.StreamApiClientAdditionalSetup);
+            client = new StreamApiRequestSender(settings.StreamApiCluster, log.WithErrorsTransformedToWarns(), bufferPool, settings.StreamApiClientAdditionalSetup);
 
             var instanceMetricContext = settings.InstanceMetricContext ?? new DevNullMetricContext();
             eventsMetric = instanceMetricContext.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
