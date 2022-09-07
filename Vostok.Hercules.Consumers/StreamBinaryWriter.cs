@@ -34,7 +34,7 @@ namespace Vostok.Hercules.Consumers
             this.log = log = (log ?? LogProvider.Get()).ForContext<StreamBinaryWriter>();
 
             var bufferPool = new BufferPool(settings.MaxPooledBufferSize, settings.MaxPooledBuffersPerBucket);
-            client = new GateRequestSender(settings.GateCluster, log /*.WithErrorsTransformedToWarns()*/, bufferPool, settings.GateClientAdditionalSetup);
+            client = new GateRequestSender(settings.GateCluster, log.WithErrorsTransformedToWarns(), bufferPool, settings.GateClientAdditionalSetup);
             tracer = settings.Tracer ?? TracerProvider.Get();
 
             eventsMetric = settings.MetricContext?.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
