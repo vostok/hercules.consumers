@@ -1,3 +1,7 @@
+## 2.0.2 (29-11-2022):
+
+StreamConsumer: added supports for recall RunAsync method after cancellation
+
 ## 2.0.1 (01-09-2022):
 
 Use `IBinaryEventsReader` instead of `IBinaryBufferReader` in event consumers.

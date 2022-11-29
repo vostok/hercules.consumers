@@ -56,6 +56,9 @@ namespace Vostok.Hercules.Consumers
 
         public async Task RunAsync(CancellationToken cancellationToken)
         {
+            // note (a.tolstov, 29.11.2022): For re-run supports
+            (coordinates, shardingSettings) = (null, null);
+            
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
