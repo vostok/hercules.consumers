@@ -11,6 +11,7 @@ using Vostok.Hercules.Client.Abstractions.Results;
 using Vostok.Hercules.Client.Internal;
 using Vostok.Hercules.Client.Serialization.Readers;
 using Vostok.Hercules.Consumers.Helpers;
+using Vostok.Hercules.Consumers.Kafka;
 using Vostok.Logging.Abstractions;
 using Vostok.Logging.Context;
 using Vostok.Metrics;
@@ -30,7 +31,7 @@ namespace Vostok.Hercules.Consumers
     {
         private readonly BatchesStreamConsumerSettings<T> settings;
         private readonly ILog log;
-        private readonly StreamApiRequestSender client;
+        private readonly KafkaTopicReader client;
         private readonly ITracer tracer;
 
         private StreamCoordinates coordinates;
@@ -49,7 +50,13 @@ namespace Vostok.Hercules.Consumers
             tracer = settings.Tracer ?? TracerProvider.Get();
 
             var bufferPool = new BufferPool(settings.MaxPooledBufferSize, settings.MaxPooledBuffersPerBucket);
-            client = new StreamApiRequestSender(settings.StreamApiCluster, log.WithErrorsTransformedToWarns(), bufferPool, settings.StreamApiClientAdditionalSetup);
+            var kafkaTopicReaderSettings = new KafkaTopicReaderSettings(
+                    settings.KafkaBootstrapServers ?? throw new InvalidOperationException(),
+                    settings.ConsumerGroupId ?? throw new InvalidOperationException(),
+                    settings.StreamName);
+            client = new KafkaTopicReader(kafkaTopicReaderSettings,
+                log.WithErrorsTransformedToWarns(),
+                bufferPool);
 
             var instanceMetricContext = settings.InstanceMetricContext ?? new DevNullMetricContext();
             eventsMetric = instanceMetricContext.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
@@ -95,6 +102,8 @@ namespace Vostok.Hercules.Consumers
                 }
             }
 
+            client.Close();
+
             if (coordinates != null)
                 await settings.CoordinatesStorage.AdvanceAsync(coordinates).ConfigureAwait(false);
             log.Info("Final coordinates: {StreamCoordinates}.", coordinates);
@@ -111,6 +120,7 @@ namespace Vostok.Hercules.Consumers
                 readTask = null;
 
                 await RestartCoordinates().ConfigureAwait(false);
+                client.Assign(coordinates);
 
                 settings.OnRestart?.Invoke(coordinates);
             }
@@ -281,7 +291,7 @@ namespace Vostok.Hercules.Consumers
 
                 do
                 {
-                    readResult = await client.ReadAsync(query, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
+                    readResult = await client.ReadAsync(query, settings.EventsReadTimeout).ConfigureAwait(false);
 
                     if (!readResult.IsSuccessful)
                     {
@@ -318,7 +328,7 @@ namespace Vostok.Hercules.Consumers
             {
                 do
                 {
-                    result = await client.SeekToEndAsync(query, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
+                    result = await client.SeekToEndAsync(query, settings.EventsReadTimeout).ConfigureAwait(false);
 
                     if (!result.IsSuccessful)
                     {

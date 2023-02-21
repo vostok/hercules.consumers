@@ -1,0 +1,4 @@
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.ConsumerGroupId.get -> string
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.ConsumerGroupId.set -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.KafkaBootstrapServers.get -> string
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.KafkaBootstrapServers.set -> void
