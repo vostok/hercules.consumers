@@ -30,6 +30,12 @@ namespace Vostok.Hercules.Consumers
 
         [NotNull]
         public string StreamName { get; }
+        
+        [CanBeNull]
+        public string KafkaBootstrapServers { get; set; }
+        
+        [CanBeNull]
+        public string ConsumerGroupId { get; set; }
 
         [NotNull]
         public Func<string> ApiKeyProvider { get; }
