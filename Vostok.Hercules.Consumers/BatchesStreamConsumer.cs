@@ -67,6 +67,7 @@ namespace Vostok.Hercules.Consumers
 
         public async Task RunAsync(CancellationToken cancellationToken)
         {
+            client.Assign();
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
@@ -120,7 +121,6 @@ namespace Vostok.Hercules.Consumers
                 readTask = null;
 
                 await RestartCoordinates().ConfigureAwait(false);
-                client.Assign(coordinates);
 
                 settings.OnRestart?.Invoke(coordinates);
             }
