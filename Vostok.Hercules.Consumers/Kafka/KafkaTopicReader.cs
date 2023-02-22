@@ -50,10 +50,10 @@ internal sealed class KafkaTopicReader
         log.Info("Kafka consumer assigned to coordinates");
     }
 
-    public async Task<RawReadStreamResult> ReadAsync(ReadStreamQuery query, TimeSpan timeout) =>
-        await Task.Run(() => ReadInternal(query, timeout)).ConfigureAwait(false);
+    public async Task<RawReadStreamResult> ReadAsync(ReadStreamQuery query) =>
+        await Task.Run(() => ReadInternal(query)).ConfigureAwait(false);
 
-    private RawReadStreamResult ReadInternal(ReadStreamQuery query, TimeSpan _)
+    private RawReadStreamResult ReadInternal(ReadStreamQuery query)
     {
         SeekBeforeRead(query.Coordinates);
 
@@ -114,35 +114,6 @@ internal sealed class KafkaTopicReader
             consumer.Seek(new TopicPartitionOffset(settings.Topic,
                 new Partition(position.Partition),
                 new Offset(position.Offset)));
-        }
-    }
-
-    public Task<SeekToEndStreamResult> SeekToEndAsync(SeekToEndStreamQuery _, TimeSpan __)
-    {
-        try
-        {
-            var streamPositions = new StreamPosition[consumer.Assignment.Count];
-            for (var i = 0; i < consumer.Assignment.Count; i++)
-            {
-                var topicPartition = consumer.Assignment[i];
-                var highOffset = consumer.GetWatermarkOffsets(topicPartition).High;
-
-                if (highOffset == Offset.Unset)
-                    return Task.FromResult(new SeekToEndStreamResult(HerculesStatus.UnknownError, null, "Found Unset offset"));
-
-                streamPositions[i] = new StreamPosition
-                {
-                    Partition = topicPartition.Partition.Value,
-                    Offset = highOffset.Value
-                };
-            }
-
-            var seekToEndStreamPayload = new SeekToEndStreamPayload(new StreamCoordinates(streamPositions));
-            return Task.FromResult(new SeekToEndStreamResult(HerculesStatus.Success, seekToEndStreamPayload));
-        }
-        catch (Exception e)
-        {
-            return Task.FromResult(new SeekToEndStreamResult(HerculesStatus.UnknownError, null, e.Message));
         }
     }
 
