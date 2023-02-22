@@ -31,7 +31,8 @@ namespace Vostok.Hercules.Consumers
     {
         private readonly BatchesStreamConsumerSettings<T> settings;
         private readonly ILog log;
-        private readonly KafkaTopicReader client;
+        private readonly StreamApiRequestSender client;
+        private readonly KafkaTopicReader reader;
         private readonly ITracer tracer;
 
         private StreamCoordinates coordinates;
@@ -50,11 +51,12 @@ namespace Vostok.Hercules.Consumers
             tracer = settings.Tracer ?? TracerProvider.Get();
 
             var bufferPool = new BufferPool(settings.MaxPooledBufferSize, settings.MaxPooledBuffersPerBucket);
+            client = new StreamApiRequestSender(settings.StreamApiCluster, log.WithErrorsTransformedToWarns(), bufferPool, settings.StreamApiClientAdditionalSetup);
             var kafkaTopicReaderSettings = new KafkaTopicReaderSettings(
                     settings.KafkaBootstrapServers ?? throw new InvalidOperationException(),
                     settings.ConsumerGroupId ?? throw new InvalidOperationException(),
                     settings.StreamName);
-            client = new KafkaTopicReader(kafkaTopicReaderSettings,
+            reader = new KafkaTopicReader(kafkaTopicReaderSettings,
                 log.WithErrorsTransformedToWarns(),
                 bufferPool);
 
@@ -67,7 +69,7 @@ namespace Vostok.Hercules.Consumers
 
         public async Task RunAsync(CancellationToken cancellationToken)
         {
-            client.Assign();
+            reader.Assign();
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
@@ -103,7 +105,7 @@ namespace Vostok.Hercules.Consumers
                 }
             }
 
-            client.Close();
+            reader.Close();
 
             if (coordinates != null)
                 await settings.CoordinatesStorage.AdvanceAsync(coordinates).ConfigureAwait(false);
@@ -291,7 +293,7 @@ namespace Vostok.Hercules.Consumers
 
                 do
                 {
-                    readResult = await client.ReadAsync(query, settings.EventsReadTimeout).ConfigureAwait(false);
+                    readResult = await reader.ReadAsync(query).ConfigureAwait(false);
 
                     if (!readResult.IsSuccessful)
                     {
@@ -328,7 +330,7 @@ namespace Vostok.Hercules.Consumers
             {
                 do
                 {
-                    result = await client.SeekToEndAsync(query, settings.EventsReadTimeout).ConfigureAwait(false);
+                    result = await client.SeekToEndAsync(query, settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
 
                     if (!result.IsSuccessful)
                     {
