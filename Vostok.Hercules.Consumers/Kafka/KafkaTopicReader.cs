@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Vostok.Commons.Binary;
@@ -55,7 +56,7 @@ internal sealed class KafkaTopicReader
 
     private RawReadStreamResult ReadInternal(ReadStreamQuery query)
     {
-        SeekBeforeRead(query.Coordinates);
+        var lastConsumedOffset = SeekBeforeRead(query.Coordinates);
 
         var eventsWriter = new BinaryBufferWriter(bufferPool.Rent((int)ReadBufferRentSize.Bytes))
         {
@@ -64,7 +65,6 @@ internal sealed class KafkaTopicReader
         };
 
         var eventsCount = 0;
-        var lastConsumedOffset = Offset.Unset;
         try
         {
             while (eventsCount < query.Limit)
@@ -107,14 +107,16 @@ internal sealed class KafkaTopicReader
         return new RawReadStreamResult(HerculesStatus.Success, rawReadStreamPayload);
     }
 
-    private void SeekBeforeRead(StreamCoordinates coordinates)
+    private Offset SeekBeforeRead(StreamCoordinates coordinates)
     {
-        foreach (var position in coordinates.Positions)
-        {
-            consumer.Seek(new TopicPartitionOffset(settings.Topic,
-                new Partition(position.Partition),
-                new Offset(position.Offset)));
-        }
+        var position = coordinates.Positions.First(p => p.Partition == Partition);
+        consumer.Seek(new TopicPartitionOffset(settings.Topic,
+            new Partition(position.Partition),
+            new Offset(position.Offset)));
+
+        var lastConsumedOffset = position.Offset - 1;
+
+        return lastConsumedOffset;
     }
 
     public void Close()
