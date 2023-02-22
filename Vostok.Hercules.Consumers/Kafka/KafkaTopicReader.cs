@@ -19,7 +19,7 @@ internal sealed class KafkaTopicReader
     private readonly KafkaTopicReaderSettings settings;
     private readonly ILog log;
     private readonly BufferPool bufferPool;
-    
+
     private readonly IConsumer<Ignore, byte[]> consumer;
 
     public KafkaTopicReader(KafkaTopicReaderSettings settings, ILog log, BufferPool bufferPool)
@@ -35,7 +35,7 @@ internal sealed class KafkaTopicReader
             AutoOffsetReset = AutoOffsetReset.Latest,
             EnableAutoCommit = false
         };
-        
+
         var poolingValueDeserializer = new PoolingValueDeserializer(this);
         var builder = new ConsumerBuilder<Ignore, byte[]>(consumerConfig).SetValueDeserializer(poolingValueDeserializer);
         consumer = builder.Build();
@@ -66,7 +66,7 @@ internal sealed class KafkaTopicReader
         while (count <= query.Limit && !isEof)
         {
             var result = consumer.Consume();
-            
+
             binaryWriter.WriteWithoutLength(result.Message.Value);
             count++;
 
@@ -74,7 +74,7 @@ internal sealed class KafkaTopicReader
         }
 
         var nextCoordinates = StreamCoordinates.Empty;
-        
+
         var valueDisposable = new ValueDisposable<ArraySegment<byte>>(binaryWriter.FilledSegment, new EmptyDisposable());
         var rawReadStreamPayload = new RawReadStreamPayload(valueDisposable, nextCoordinates);
         return new RawReadStreamResult(HerculesStatus.Success, rawReadStreamPayload);
@@ -105,10 +105,10 @@ internal sealed class KafkaTopicReader
     {
         consumer.Close();
         consumer.Dispose();
-        
+
         log.Info("Kafka consumer stopped.");
     }
-    
+
     private sealed class PoolingValueDeserializer : IDeserializer<byte[]>
     {
         private readonly KafkaTopicReader topicReader;
@@ -122,7 +122,7 @@ internal sealed class KafkaTopicReader
         {
             var bytes = topicReader.bufferPool.Rent(data.Length);
             data.CopyTo(bytes);
-            
+
             return bytes;
         }
     }
