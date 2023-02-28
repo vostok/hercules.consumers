@@ -7,6 +7,7 @@ notests *default:
 
   install:
     - Vostok.Hercules.Consumers/bin/Release/netstandard2.0/Vostok.Hercules.Consumers.dll
+    - nuget Confluent.Kafka/2.0.2
 
   deps:
     - vostok.configuration
@@ -33,6 +34,3 @@ full-build > notests:
   build:
     target: Vostok.Hercules.Consumers.sln
     configuration: Release
-
-  install:
-    - nuget Confluent.Kafka/2.0.2
