@@ -44,6 +44,9 @@ namespace Vostok.Hercules.Consumers
         protected private StreamShardingSettings shardingSettings;
         protected private volatile bool restart;
 
+        private readonly bool useDirectKafkaReader;
+        private readonly Func<ReadStreamQuery, Task<RawReadStreamResult>> read;
+
         public BatchesStreamConsumer([NotNull] BatchesStreamConsumerSettings<T> settings, [CanBeNull] ILog log)
         {
             this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
@@ -53,12 +56,17 @@ namespace Vostok.Hercules.Consumers
             var bufferPool = new BufferPool(settings.MaxPooledBufferSize, settings.MaxPooledBuffersPerBucket);
             client = new StreamApiRequestSender(settings.StreamApiCluster, log.WithErrorsTransformedToWarns(), bufferPool, settings.StreamApiClientAdditionalSetup);
             var kafkaTopicReaderSettings = new KafkaTopicReaderSettings(
-                    settings.KafkaBootstrapServers ?? throw new InvalidOperationException(),
-                    settings.ConsumerGroupId ?? throw new InvalidOperationException(),
+                    settings.KafkaBootstrapServers,
+                    settings.ConsumerGroupId,
                     settings.StreamName);
             reader = new KafkaTopicReader(kafkaTopicReaderSettings,
                 log.WithErrorsTransformedToWarns(),
                 bufferPool);
+
+            useDirectKafkaReader = this.settings.ShardingSettingsProvider().ClientShardIndex == 0;
+            read = useDirectKafkaReader
+                ? async query => await reader.ReadAsync(query).ConfigureAwait(false)
+                : async query => await client.ReadAsync(query, this.settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
 
             var instanceMetricContext = settings.InstanceMetricContext ?? new DevNullMetricContext();
             eventsMetric = instanceMetricContext.CreateIntegerGauge("events", "type", new IntegerGaugeConfig {ResetOnScrape = true});
@@ -69,7 +77,9 @@ namespace Vostok.Hercules.Consumers
 
         public async Task RunAsync(CancellationToken cancellationToken)
         {
-            reader.Assign();
+            if (useDirectKafkaReader)
+                reader.Assign();
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
@@ -105,7 +115,8 @@ namespace Vostok.Hercules.Consumers
                 }
             }
 
-            reader.Close();
+            if (useDirectKafkaReader)
+                reader.Close();
 
             if (coordinates != null)
                 await settings.CoordinatesStorage.AdvanceAsync(coordinates).ConfigureAwait(false);
@@ -293,7 +304,7 @@ namespace Vostok.Hercules.Consumers
 
                 do
                 {
-                    readResult = await reader.ReadAsync(query).ConfigureAwait(false);
+                    readResult = await read(query).ConfigureAwait(false);
 
                     if (!readResult.IsSuccessful)
                     {
