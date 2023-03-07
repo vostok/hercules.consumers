@@ -40,7 +40,8 @@ internal sealed class KafkaTopicReader
             AutoOffsetReset = AutoOffsetReset.Latest,
             EnableAutoCommit = false,
             FetchMinBytes = this.settings.FetchMinBytes,
-            FetchWaitMaxMs = this.settings.FetchWaitMaxMs
+            FetchWaitMaxMs = this.settings.FetchWaitMaxMs,
+            MaxPartitionFetchBytes = 52428800
         };
 
         var builder = new ConsumerBuilder<Ignore, byte[]>(consumerConfig);
