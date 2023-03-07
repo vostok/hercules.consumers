@@ -50,7 +50,7 @@ internal sealed class KafkaTopicReader
     public void Assign()
     {
         consumer.Assign(new TopicPartition(settings.Topic, Partition));
-        log.Info("Kafka consumer assigned to coordinates");
+        log.Info($"Kafka consumer assigned to topic. Fetch min bytes: {settings.FetchMinBytes}, Fetch wait max ms: {settings.FetchWaitMaxMs}".ToString());
     }
 
     public async Task<RawReadStreamResult> ReadAsync(ReadStreamQuery query) =>
