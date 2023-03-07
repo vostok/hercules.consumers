@@ -36,6 +36,10 @@ namespace Vostok.Hercules.Consumers
         
         [CanBeNull]
         public string ConsumerGroupId { get; set; }
+        
+        public int FetchMinBytes { get; set; } = 1;
+
+        public int FetchWaitMaxMs { get; set; } = 500;
 
         [NotNull]
         public Func<string> ApiKeyProvider { get; }
