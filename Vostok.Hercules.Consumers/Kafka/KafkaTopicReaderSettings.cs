@@ -13,6 +13,10 @@ internal sealed class KafkaTopicReaderSettings
     [NotNull]
     public string Topic { get; }
 
+    public int FetchMinBytes { get; set; } = 1;
+
+    public int FetchWaitMaxMs { get; set; } = 500;
+
     public KafkaTopicReaderSettings(string bootstrapServers, string groupId, string topic)
     {
         BootstrapServers = bootstrapServers;

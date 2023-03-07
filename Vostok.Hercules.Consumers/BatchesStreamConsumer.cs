@@ -58,7 +58,11 @@ namespace Vostok.Hercules.Consumers
             var kafkaTopicReaderSettings = new KafkaTopicReaderSettings(
                     settings.KafkaBootstrapServers,
                     settings.ConsumerGroupId,
-                    settings.StreamName);
+                    settings.StreamName)
+            {
+                FetchMinBytes = settings.FetchMinBytes,
+                FetchWaitMaxMs = settings.FetchWaitMaxMs
+            };
             reader = new KafkaTopicReader(kafkaTopicReaderSettings,
                 log.WithErrorsTransformedToWarns(),
                 bufferPool);
