@@ -2,6 +2,7 @@
 using JetBrains.Annotations;
 using Vostok.Clusterclient.Core;
 using Vostok.Clusterclient.Core.Topology;
+using Vostok.Commons.Time;
 using Vostok.Hercules.Client.Abstractions.Events;
 using Vostok.Hercules.Client.Abstractions.Models;
 using Vostok.Metrics;
@@ -40,6 +41,8 @@ namespace Vostok.Hercules.Consumers
         public int FetchMinBytes { get; set; } = 1;
 
         public int FetchWaitMaxMs { get; set; } = 500;
+        
+        public TimeSpan ConsumeTimeout { get; set; } = 100.Milliseconds();
 
         [NotNull]
         public Func<string> ApiKeyProvider { get; }

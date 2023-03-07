@@ -1,5 +1,7 @@
 Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.ConsumerGroupId.get -> string
 Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.ConsumerGroupId.set -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.ConsumeTimeout.get -> System.TimeSpan
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.ConsumeTimeout.set -> void
 Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.FetchMinBytes.get -> int
 Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.FetchMinBytes.set -> void
 Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.FetchWaitMaxMs.get -> int

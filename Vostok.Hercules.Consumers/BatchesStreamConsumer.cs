@@ -61,7 +61,8 @@ namespace Vostok.Hercules.Consumers
                     settings.StreamName)
             {
                 FetchMinBytes = settings.FetchMinBytes,
-                FetchWaitMaxMs = settings.FetchWaitMaxMs
+                FetchWaitMaxMs = settings.FetchWaitMaxMs,
+                ConsumeTimeout = this.settings.ConsumeTimeout
             };
             reader = new KafkaTopicReader(kafkaTopicReaderSettings,
                 log.WithErrorsTransformedToWarns(),
