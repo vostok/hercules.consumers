@@ -8,3 +8,5 @@ Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.FetchWaitMaxMs.get ->
 Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.FetchWaitMaxMs.set -> void
 Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.KafkaBootstrapServers.get -> string
 Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.KafkaBootstrapServers.set -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.UseKafka.get -> bool
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.UseKafka.set -> void

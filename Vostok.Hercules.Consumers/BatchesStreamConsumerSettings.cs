@@ -31,6 +31,8 @@ namespace Vostok.Hercules.Consumers
 
         [NotNull]
         public string StreamName { get; }
+
+        public bool UseKafka { get; set; } = false;
         
         [CanBeNull]
         public string KafkaBootstrapServers { get; set; }
