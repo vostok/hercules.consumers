@@ -68,7 +68,7 @@ namespace Vostok.Hercules.Consumers
                 log.WithErrorsTransformedToWarns(),
                 bufferPool);
 
-            useDirectKafkaReader = this.settings.ShardingSettingsProvider().ClientShardIndex == 0;
+            useDirectKafkaReader = this.settings.UseKafka;
             read = useDirectKafkaReader
                 ? async query => await reader.ReadAsync(query).ConfigureAwait(false)
                 : async query => await client.ReadAsync(query, this.settings.ApiKeyProvider(), settings.EventsReadTimeout).ConfigureAwait(false);
