@@ -70,6 +70,9 @@ namespace Vostok.Hercules.Consumers
         // note (kungurtsev, 15.08.2022): do not call concurrently with Put
         public async Task FlushAsync()
         {
+            if (writer is null)
+                return;
+
             await FlushWriter(writer);
             writer = ObtainEmptyWriter();
         }
