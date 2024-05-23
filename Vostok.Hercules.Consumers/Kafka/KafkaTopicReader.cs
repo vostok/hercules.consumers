@@ -23,7 +23,7 @@ internal sealed class KafkaTopicReader
     private readonly IConsumer<Ignore, byte[]> consumer;
 
     private static readonly DataSize ReadBufferRentSize = 25.Megabytes(); // Approximate size
-    private static readonly Partition Partition = new(0); // Because we running experiment on replica with index = 0
+    private static readonly Partition Partition = Partition.Any;
 
     public KafkaTopicReader(KafkaTopicReaderSettings settings, ILog log, BufferPool bufferPool)
     {
