@@ -91,7 +91,11 @@ internal sealed class KafkaTopicReader
         }
 
         using (eventsWriter.JumpTo(0))
+        {
+            log.Info($"ReadInternal.eventsCount: {eventsCount}");
             eventsWriter.Write(eventsCount);
+        }
+
 
         var rawReadStreamPayload = new RawReadStreamPayload(
             new ValueDisposable<ArraySegment<byte>>(
@@ -102,21 +106,24 @@ internal sealed class KafkaTopicReader
                 new StreamPosition
                 {
                     Partition = Partition,
-                    Offset = lastConsumedOffset + 1
+                    Offset = lastConsumedOffset + 1 // ?
                 }
             }));
+        log.Info($"ReadInternal.rawReadStreamPayload: {rawReadStreamPayload}");
         return new RawReadStreamResult(HerculesStatus.Success, rawReadStreamPayload);
     }
 
     private Offset SeekBeforeRead(StreamCoordinates coordinates)
     {
         var position = coordinates.Positions.First(p => p.Partition == Partition);
+        log.Info($"SeekBeforeRead.position: {position}");
         consumer.Seek(new TopicPartitionOffset(settings.Topic,
             new Partition(position.Partition),
             new Offset(position.Offset)));
 
-        var lastConsumedOffset = position.Offset - 1;
+        var lastConsumedOffset = position.Offset - 1; // ?
 
+        log.Info($"SeekBeforeRead.lastConsumedOffset: {lastConsumedOffset}");
         return lastConsumedOffset;
     }
 
