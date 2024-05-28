@@ -35,7 +35,7 @@ internal sealed class KafkaTopicReader
         {
             GroupId = this.settings.GroupId,
             BootstrapServers = this.settings.BootstrapServers,
-            AutoOffsetReset = AutoOffsetReset.Earliest,
+            AutoOffsetReset = AutoOffsetReset.Latest,
             EnableAutoCommit = false,
             FetchMinBytes = this.settings.FetchMinBytes,
             FetchWaitMaxMs = this.settings.FetchWaitMaxMs
