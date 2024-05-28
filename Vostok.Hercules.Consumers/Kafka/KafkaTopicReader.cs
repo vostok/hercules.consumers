@@ -109,7 +109,7 @@ internal sealed class KafkaTopicReader
                     Offset = lastConsumedOffset + 1 // ?
                 }
             }));
-        log.Info($"ReadInternal.rawReadStreamPayload: {rawReadStreamPayload}");
+        log.Info($"ReadInternal.rawReadStreamPayload.Next: {rawReadStreamPayload.Next}");
         return new RawReadStreamResult(HerculesStatus.Success, rawReadStreamPayload);
     }
 
