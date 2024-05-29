@@ -79,7 +79,7 @@ internal sealed class KafkaTopicReader
 
             while (eventsCount < query.Limit)
             {
-                message = consumer.Consume(TimeSpan.Zero);
+                message = consumer.Consume(settings.ConsumeTimeout); // TimeSpan.Zero
                 if (message?.Message is null)
                     break;
 
