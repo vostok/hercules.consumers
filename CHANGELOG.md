@@ -1,3 +1,7 @@
+## 2.0.3 (11-12-2023):
+
+Add null check in `StreamBinaryEventsWriter.FlushAsync` to prevent NRE if there were no calls to `Put`
+
 ## 2.0.2 (29-11-2022):
 
 StreamConsumer: added supports for recall RunAsync method after cancellation
