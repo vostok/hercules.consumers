@@ -1,0 +1,277 @@
+override Vostok.Hercules.Consumers.StreamShardingSettings.Equals(object obj) -> bool
+override Vostok.Hercules.Consumers.StreamShardingSettings.GetHashCode() -> int
+static readonly Vostok.Hercules.Consumers.ConsumersConstants.DelayOnError -> System.TimeSpan
+static readonly Vostok.Hercules.Consumers.ConsumersConstants.DelayOnNoEvents -> System.TimeSpan
+static readonly Vostok.Hercules.Consumers.ConsumersConstants.EventsReadAttempts -> int
+static readonly Vostok.Hercules.Consumers.ConsumersConstants.EventsReadBatchSize -> int
+static readonly Vostok.Hercules.Consumers.ConsumersConstants.EventsReadTimeout -> System.TimeSpan
+static readonly Vostok.Hercules.Consumers.ConsumersConstants.EventsWriteBatchSize -> int
+static readonly Vostok.Hercules.Consumers.ConsumersConstants.EventsWriteTimeout -> System.TimeSpan
+static readonly Vostok.Hercules.Consumers.ConsumersConstants.MaxPooledBufferSize -> int
+static readonly Vostok.Hercules.Consumers.ConsumersConstants.MaxPooledBuffersPerBucket -> int
+static Vostok.Hercules.Consumers.Helpers.StreamCoordinatesExtensions.AdvancesOver(this Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates self, Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates other) -> bool
+static Vostok.Hercules.Consumers.Helpers.StreamCoordinatesExtensions.SetPosition(this Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates coordinates, Vostok.Hercules.Client.Abstractions.Models.StreamPosition position) -> Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates
+static Vostok.Hercules.Consumers.Helpers.StreamCoordinatesMerger.DistanceTo(this Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates from, Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates to) -> long
+static Vostok.Hercules.Consumers.Helpers.StreamCoordinatesMerger.FilterBy(this Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates left, Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates right) -> Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates
+static Vostok.Hercules.Consumers.Helpers.StreamCoordinatesMerger.MergeMaxWith(this Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates left, Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates right) -> Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates
+static Vostok.Hercules.Consumers.Helpers.StreamCoordinatesMerger.MergeMinWith(this Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates left, Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates right) -> Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates
+Vostok.Hercules.Consumers.AdHocEventsHandler
+Vostok.Hercules.Consumers.AdHocEventsHandler.AdHocEventsHandler(System.Func<Vostok.Hercules.Client.Abstractions.Queries.ReadStreamQuery, Vostok.Hercules.Client.Abstractions.Results.ReadStreamResult, System.Threading.CancellationToken, System.Threading.Tasks.Task> handler) -> void
+Vostok.Hercules.Consumers.AdHocEventsHandler.HandleAsync(Vostok.Hercules.Client.Abstractions.Queries.ReadStreamQuery query, Vostok.Hercules.Client.Abstractions.Results.ReadStreamResult streamResult, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+Vostok.Hercules.Consumers.AdHocEventsHandler<T>
+Vostok.Hercules.Consumers.AdHocEventsHandler<T>.AdHocEventsHandler(System.Func<Vostok.Hercules.Client.Abstractions.Queries.ReadStreamQuery, Vostok.Hercules.Client.Abstractions.Results.ReadStreamResult<T>, System.Threading.CancellationToken, System.Threading.Tasks.Task> handler) -> void
+Vostok.Hercules.Consumers.AdHocEventsHandler<T>.HandleAsync(Vostok.Hercules.Client.Abstractions.Queries.ReadStreamQuery query, Vostok.Hercules.Client.Abstractions.Results.ReadStreamResult<T> streamResult, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+Vostok.Hercules.Consumers.BatchesStreamConsumer<T>
+Vostok.Hercules.Consumers.BatchesStreamConsumer<T>.BatchesStreamConsumer(Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T> settings, Vostok.Logging.Abstractions.ILog log) -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumer<T>.LogCoordinates(string message, Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates streamCoordinates) -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumer<T>.RunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.ApiKeyProvider.get -> System.Func<string>
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.ApplicationMetricContext.get -> Vostok.Metrics.IMetricContext
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.ApplicationMetricContext.set -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.BatchesStreamConsumerSettings(string streamName, System.Func<string> apiKeyProvider, Vostok.Clusterclient.Core.Topology.IClusterProvider streamApiCluster, System.Func<Vostok.Hercules.Client.Abstractions.Events.IBinaryEventsReader, Vostok.Hercules.Client.Abstractions.Events.IHerculesEventBuilder<T>> eventBuilderProvider, Vostok.Hercules.Consumers.IStreamCoordinatesStorage coordinatesStorage, System.Func<Vostok.Hercules.Consumers.StreamShardingSettings> shardingSettingsProvider) -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.CoordinatesStorage.get -> Vostok.Hercules.Consumers.IStreamCoordinatesStorage
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.DelayOnError.get -> System.TimeSpan
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.DelayOnError.set -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.DelayOnNoEvents.get -> System.TimeSpan
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.DelayOnNoEvents.set -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.EventBuilderProvider.get -> System.Func<Vostok.Hercules.Client.Abstractions.Events.IBinaryEventsReader, Vostok.Hercules.Client.Abstractions.Events.IHerculesEventBuilder<T>>
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.EventsReadBatchSize.get -> int
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.EventsReadBatchSize.set -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.EventsReadTimeout.get -> System.TimeSpan
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.EventsReadTimeout.set -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.InstanceMetricContext.get -> Vostok.Metrics.IMetricContext
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.InstanceMetricContext.set -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.MaxPooledBufferSize.get -> int
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.MaxPooledBufferSize.set -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.MaxPooledBuffersPerBucket.get -> int
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.MaxPooledBuffersPerBucket.set -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnBatchBegin.get -> System.Action<Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates>
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnBatchBegin.set -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnBatchEnd.get -> System.Action<Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates>
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnBatchEnd.set -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnEvent.get -> System.Action<T, Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates>
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnEvent.set -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnRestart.get -> System.Action<Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates>
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnRestart.set -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnStop.get -> System.Action<Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates>
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.OnStop.set -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.ShardingSettingsProvider.get -> System.Func<Vostok.Hercules.Consumers.StreamShardingSettings>
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.StreamApiClientAdditionalSetup.get -> Vostok.Clusterclient.Core.ClusterClientSetup
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.StreamApiClientAdditionalSetup.set -> void
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.StreamApiCluster.get -> Vostok.Clusterclient.Core.Topology.IClusterProvider
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.StreamName.get -> string
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.Tracer.get -> Vostok.Tracing.Abstractions.ITracer
+Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.Tracer.set -> void
+Vostok.Hercules.Consumers.ConsumersConstants
+Vostok.Hercules.Consumers.Helpers.StreamCoordinatesExtensions
+Vostok.Hercules.Consumers.Helpers.StreamCoordinatesMerger
+Vostok.Hercules.Consumers.InMemoryCoordinatesStorage
+Vostok.Hercules.Consumers.InMemoryCoordinatesStorage.AdvanceAsync(Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates to) -> System.Threading.Tasks.Task
+Vostok.Hercules.Consumers.InMemoryCoordinatesStorage.GetCurrentAsync() -> System.Threading.Tasks.Task<Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates>
+Vostok.Hercules.Consumers.InMemoryCoordinatesStorage.InMemoryCoordinatesStorage() -> void
+Vostok.Hercules.Consumers.InMemoryCoordinatesStorage.InMemoryCoordinatesStorage(Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates initialCoordinates) -> void
+Vostok.Hercules.Consumers.IStreamCoordinatesStorage
+Vostok.Hercules.Consumers.IStreamCoordinatesStorage.AdvanceAsync(Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates to) -> System.Threading.Tasks.Task
+Vostok.Hercules.Consumers.IStreamCoordinatesStorage.GetCurrentAsync() -> System.Threading.Tasks.Task<Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates>
+Vostok.Hercules.Consumers.IStreamEventsHandler
+Vostok.Hercules.Consumers.IStreamEventsHandler.HandleAsync(Vostok.Hercules.Client.Abstractions.Queries.ReadStreamQuery query, Vostok.Hercules.Client.Abstractions.Results.ReadStreamResult streamResult, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+Vostok.Hercules.Consumers.IStreamEventsHandler<T>
+Vostok.Hercules.Consumers.IStreamEventsHandler<T>.HandleAsync(Vostok.Hercules.Client.Abstractions.Queries.ReadStreamQuery query, Vostok.Hercules.Client.Abstractions.Results.ReadStreamResult<T> streamResult, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+Vostok.Hercules.Consumers.StreamBinaryEventsWriter
+Vostok.Hercules.Consumers.StreamBinaryEventsWriter.FlushAsync() -> System.Threading.Tasks.Task
+Vostok.Hercules.Consumers.StreamBinaryEventsWriter.Put(System.Action<Vostok.Hercules.Client.Abstractions.Events.IHerculesEventBuilder> buildEvent) -> void
+Vostok.Hercules.Consumers.StreamBinaryEventsWriter.StreamBinaryEventsWriter(Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings settings, Vostok.Logging.Abstractions.ILog log) -> void
+Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings
+Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.MaximumEventSize.get -> int
+Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.MaximumEventSize.set -> void
+Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.MetricContext.get -> Vostok.Metrics.IMetricContext
+Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.MetricContext.set -> void
+Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.StreamBinaryEventsWriterSettings(Vostok.Hercules.Consumers.StreamBinaryWriter streamBinaryWriter, string streamName) -> void
+Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.StreamBinaryWriter.get -> Vostok.Hercules.Consumers.StreamBinaryWriter
+Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.StreamName.get -> string
+Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.Tracer.get -> Vostok.Tracing.Abstractions.ITracer
+Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.Tracer.set -> void
+Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.WriterCapacity.get -> Vostok.Configuration.Primitives.DataSize
+Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.WriterCapacity.set -> void
+Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.WriterMaxTtl.get -> System.TimeSpan
+Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.WriterMaxTtl.set -> void
+Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.WritersPoolCapacity.get -> int
+Vostok.Hercules.Consumers.StreamBinaryEventsWriterSettings.WritersPoolCapacity.set -> void
+Vostok.Hercules.Consumers.StreamBinaryWriter
+Vostok.Hercules.Consumers.StreamBinaryWriter.StreamBinaryWriter(Vostok.Hercules.Consumers.StreamBinaryWriterSettings settings, Vostok.Logging.Abstractions.ILog log) -> void
+Vostok.Hercules.Consumers.StreamBinaryWriter.WriteAsync(string streamName, System.ArraySegment<byte> bytes, int eventsCount) -> System.Threading.Tasks.Task
+Vostok.Hercules.Consumers.StreamBinaryWriterSettings
+Vostok.Hercules.Consumers.StreamBinaryWriterSettings.ApiKeyProvider.get -> System.Func<string>
+Vostok.Hercules.Consumers.StreamBinaryWriterSettings.DelayOnError.get -> System.TimeSpan
+Vostok.Hercules.Consumers.StreamBinaryWriterSettings.DelayOnError.set -> void
+Vostok.Hercules.Consumers.StreamBinaryWriterSettings.EventsWriteTimeout.get -> System.TimeSpan
+Vostok.Hercules.Consumers.StreamBinaryWriterSettings.EventsWriteTimeout.set -> void
+Vostok.Hercules.Consumers.StreamBinaryWriterSettings.GateClientAdditionalSetup.get -> Vostok.Clusterclient.Core.ClusterClientSetup
+Vostok.Hercules.Consumers.StreamBinaryWriterSettings.GateClientAdditionalSetup.set -> void
+Vostok.Hercules.Consumers.StreamBinaryWriterSettings.GateCluster.get -> Vostok.Clusterclient.Core.Topology.IClusterProvider
+Vostok.Hercules.Consumers.StreamBinaryWriterSettings.MaxPooledBufferSize.get -> int
+Vostok.Hercules.Consumers.StreamBinaryWriterSettings.MaxPooledBufferSize.set -> void
+Vostok.Hercules.Consumers.StreamBinaryWriterSettings.MaxPooledBuffersPerBucket.get -> int
+Vostok.Hercules.Consumers.StreamBinaryWriterSettings.MaxPooledBuffersPerBucket.set -> void
+Vostok.Hercules.Consumers.StreamBinaryWriterSettings.MetricContext.get -> Vostok.Metrics.IMetricContext
+Vostok.Hercules.Consumers.StreamBinaryWriterSettings.MetricContext.set -> void
+Vostok.Hercules.Consumers.StreamBinaryWriterSettings.StreamBinaryWriterSettings(System.Func<string> apiKeyProvider, Vostok.Clusterclient.Core.Topology.IClusterProvider gateCluster) -> void
+Vostok.Hercules.Consumers.StreamBinaryWriterSettings.Tracer.get -> Vostok.Tracing.Abstractions.ITracer
+Vostok.Hercules.Consumers.StreamBinaryWriterSettings.Tracer.set -> void
+Vostok.Hercules.Consumers.StreamConsumer
+Vostok.Hercules.Consumers.StreamConsumer.RunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+Vostok.Hercules.Consumers.StreamConsumer.StreamConsumer(Vostok.Hercules.Consumers.StreamConsumerSettings settings, Vostok.Logging.Abstractions.ILog log) -> void
+Vostok.Hercules.Consumers.StreamConsumer<T>
+Vostok.Hercules.Consumers.StreamConsumer<T>.RunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+Vostok.Hercules.Consumers.StreamConsumer<T>.StreamConsumer(Vostok.Hercules.Consumers.StreamConsumerSettings<T> settings, Vostok.Logging.Abstractions.ILog log) -> void
+Vostok.Hercules.Consumers.StreamConsumerSettings
+Vostok.Hercules.Consumers.StreamConsumerSettings.StreamConsumerSettings(string streamName, Vostok.Hercules.Client.Abstractions.IHerculesStreamClient streamClient, Vostok.Hercules.Consumers.IStreamEventsHandler eventsHandler, Vostok.Hercules.Consumers.IStreamCoordinatesStorage coordinatesStorage, System.Func<Vostok.Hercules.Consumers.StreamShardingSettings> shardingSettingsProvider) -> void
+Vostok.Hercules.Consumers.StreamConsumerSettings<T>
+Vostok.Hercules.Consumers.StreamConsumerSettings<T>.CoordinatesStorage.get -> Vostok.Hercules.Consumers.IStreamCoordinatesStorage
+Vostok.Hercules.Consumers.StreamConsumerSettings<T>.DelayOnError.get -> System.TimeSpan
+Vostok.Hercules.Consumers.StreamConsumerSettings<T>.DelayOnError.set -> void
+Vostok.Hercules.Consumers.StreamConsumerSettings<T>.DelayOnNoEvents.get -> System.TimeSpan
+Vostok.Hercules.Consumers.StreamConsumerSettings<T>.DelayOnNoEvents.set -> void
+Vostok.Hercules.Consumers.StreamConsumerSettings<T>.EventsHandler.get -> Vostok.Hercules.Consumers.IStreamEventsHandler<T>
+Vostok.Hercules.Consumers.StreamConsumerSettings<T>.EventsReadAttempts.get -> int
+Vostok.Hercules.Consumers.StreamConsumerSettings<T>.EventsReadAttempts.set -> void
+Vostok.Hercules.Consumers.StreamConsumerSettings<T>.EventsReadBatchSize.get -> int
+Vostok.Hercules.Consumers.StreamConsumerSettings<T>.EventsReadBatchSize.set -> void
+Vostok.Hercules.Consumers.StreamConsumerSettings<T>.EventsReadTimeout.get -> System.TimeSpan
+Vostok.Hercules.Consumers.StreamConsumerSettings<T>.EventsReadTimeout.set -> void
+Vostok.Hercules.Consumers.StreamConsumerSettings<T>.MetricContext.get -> Vostok.Metrics.IMetricContext
+Vostok.Hercules.Consumers.StreamConsumerSettings<T>.MetricContext.set -> void
+Vostok.Hercules.Consumers.StreamConsumerSettings<T>.ShardingSettingsProvider.get -> System.Func<Vostok.Hercules.Consumers.StreamShardingSettings>
+Vostok.Hercules.Consumers.StreamConsumerSettings<T>.StreamClient.get -> Vostok.Hercules.Client.Abstractions.IHerculesStreamClient<T>
+Vostok.Hercules.Consumers.StreamConsumerSettings<T>.StreamConsumerSettings(string streamName, Vostok.Hercules.Client.Abstractions.IHerculesStreamClient<T> streamClient, Vostok.Hercules.Consumers.IStreamEventsHandler<T> eventsHandler, Vostok.Hercules.Consumers.IStreamCoordinatesStorage coordinatesStorage, System.Func<Vostok.Hercules.Consumers.StreamShardingSettings> shardingSettingsProvider) -> void
+Vostok.Hercules.Consumers.StreamConsumerSettings<T>.StreamName.get -> string
+Vostok.Hercules.Consumers.StreamReader
+Vostok.Hercules.Consumers.StreamReader.CountStreamRemainingEventsAsync(Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates coordinates, Vostok.Hercules.Consumers.StreamShardingSettings shardingSettings, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<long?>
+Vostok.Hercules.Consumers.StreamReader.ReadAsync(Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates coordinates, Vostok.Hercules.Consumers.StreamShardingSettings shardingSettings, long additionalLimit, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<(Vostok.Hercules.Client.Abstractions.Queries.ReadStreamQuery query, Vostok.Hercules.Client.Abstractions.Results.ReadStreamResult result)>
+Vostok.Hercules.Consumers.StreamReader.ReadAsync(Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates coordinates, Vostok.Hercules.Consumers.StreamShardingSettings shardingSettings, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<(Vostok.Hercules.Client.Abstractions.Queries.ReadStreamQuery query, Vostok.Hercules.Client.Abstractions.Results.ReadStreamResult result)>
+Vostok.Hercules.Consumers.StreamReader.SeekToEndAsync(Vostok.Hercules.Consumers.StreamShardingSettings shardingSettings, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates>
+Vostok.Hercules.Consumers.StreamReader.StreamReader(Vostok.Hercules.Consumers.StreamReaderSettings settings, Vostok.Logging.Abstractions.ILog log) -> void
+Vostok.Hercules.Consumers.StreamReader<T>
+Vostok.Hercules.Consumers.StreamReader<T>.CountStreamRemainingEventsAsync(Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates coordinates, Vostok.Hercules.Consumers.StreamShardingSettings shardingSettings, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<long?>
+Vostok.Hercules.Consumers.StreamReader<T>.ReadAsync(Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates coordinates, Vostok.Hercules.Consumers.StreamShardingSettings shardingSettings, long additionalLimit, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<(Vostok.Hercules.Client.Abstractions.Queries.ReadStreamQuery query, Vostok.Hercules.Client.Abstractions.Results.ReadStreamResult<T> result)>
+Vostok.Hercules.Consumers.StreamReader<T>.ReadAsync(Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates coordinates, Vostok.Hercules.Consumers.StreamShardingSettings shardingSettings, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<(Vostok.Hercules.Client.Abstractions.Queries.ReadStreamQuery query, Vostok.Hercules.Client.Abstractions.Results.ReadStreamResult<T> result)>
+Vostok.Hercules.Consumers.StreamReader<T>.SeekToEndAsync(Vostok.Hercules.Consumers.StreamShardingSettings shardingSettings, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates>
+Vostok.Hercules.Consumers.StreamReader<T>.StreamReader(Vostok.Hercules.Consumers.StreamReaderSettings<T> settings, Vostok.Logging.Abstractions.ILog log) -> void
+Vostok.Hercules.Consumers.StreamReaderSettings
+Vostok.Hercules.Consumers.StreamReaderSettings.StreamReaderSettings(string streamName, Vostok.Hercules.Client.Abstractions.IHerculesStreamClient streamClient) -> void
+Vostok.Hercules.Consumers.StreamReaderSettings<T>
+Vostok.Hercules.Consumers.StreamReaderSettings<T>.DelayOnError.get -> System.TimeSpan
+Vostok.Hercules.Consumers.StreamReaderSettings<T>.DelayOnError.set -> void
+Vostok.Hercules.Consumers.StreamReaderSettings<T>.EventsReadAttempts.get -> int
+Vostok.Hercules.Consumers.StreamReaderSettings<T>.EventsReadAttempts.set -> void
+Vostok.Hercules.Consumers.StreamReaderSettings<T>.EventsReadBatchSize.get -> int
+Vostok.Hercules.Consumers.StreamReaderSettings<T>.EventsReadBatchSize.set -> void
+Vostok.Hercules.Consumers.StreamReaderSettings<T>.EventsReadTimeout.get -> System.TimeSpan
+Vostok.Hercules.Consumers.StreamReaderSettings<T>.EventsReadTimeout.set -> void
+Vostok.Hercules.Consumers.StreamReaderSettings<T>.StreamClient.get -> Vostok.Hercules.Client.Abstractions.IHerculesStreamClient<T>
+Vostok.Hercules.Consumers.StreamReaderSettings<T>.StreamName.get -> string
+Vostok.Hercules.Consumers.StreamReaderSettings<T>.StreamReaderSettings(string streamName, Vostok.Hercules.Client.Abstractions.IHerculesStreamClient<T> streamClient) -> void
+Vostok.Hercules.Consumers.StreamSegmentReader<T>
+Vostok.Hercules.Consumers.StreamSegmentReader<T>.ReadAsync(Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates coordinates, Vostok.Hercules.Consumers.StreamShardingSettings shardingSettings, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<(Vostok.Hercules.Client.Abstractions.Queries.ReadStreamQuery query, Vostok.Hercules.Client.Abstractions.Results.ReadStreamResult<T> result)>
+Vostok.Hercules.Consumers.StreamSegmentReader<T>.StreamSegmentReader(Vostok.Hercules.Consumers.StreamSegmentReaderSettings<T> settings, Vostok.Logging.Abstractions.ILog log) -> void
+Vostok.Hercules.Consumers.StreamSegmentReaderSettings<T>
+Vostok.Hercules.Consumers.StreamSegmentReaderSettings<T>.DelayOnError.get -> System.TimeSpan
+Vostok.Hercules.Consumers.StreamSegmentReaderSettings<T>.DelayOnError.set -> void
+Vostok.Hercules.Consumers.StreamSegmentReaderSettings<T>.End.get -> System.Collections.Generic.Dictionary<int, Vostok.Hercules.Client.Abstractions.Models.StreamPosition>
+Vostok.Hercules.Consumers.StreamSegmentReaderSettings<T>.EventsReadAttempts.get -> int
+Vostok.Hercules.Consumers.StreamSegmentReaderSettings<T>.EventsReadAttempts.set -> void
+Vostok.Hercules.Consumers.StreamSegmentReaderSettings<T>.EventsReadBatchSize.get -> int
+Vostok.Hercules.Consumers.StreamSegmentReaderSettings<T>.EventsReadBatchSize.set -> void
+Vostok.Hercules.Consumers.StreamSegmentReaderSettings<T>.EventsReadTimeout.get -> System.TimeSpan
+Vostok.Hercules.Consumers.StreamSegmentReaderSettings<T>.EventsReadTimeout.set -> void
+Vostok.Hercules.Consumers.StreamSegmentReaderSettings<T>.Start.get -> System.Collections.Generic.Dictionary<int, Vostok.Hercules.Client.Abstractions.Models.StreamPosition>
+Vostok.Hercules.Consumers.StreamSegmentReaderSettings<T>.StreamClient.get -> Vostok.Hercules.Client.Abstractions.IHerculesStreamClient<T>
+Vostok.Hercules.Consumers.StreamSegmentReaderSettings<T>.StreamName.get -> string
+Vostok.Hercules.Consumers.StreamSegmentReaderSettings<T>.StreamSegmentReaderSettings(string streamName, Vostok.Hercules.Client.Abstractions.IHerculesStreamClient<T> streamClient, Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates start, Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates end) -> void
+Vostok.Hercules.Consumers.StreamShardingSettings
+Vostok.Hercules.Consumers.StreamShardingSettings.ClientShardCount.get -> int
+Vostok.Hercules.Consumers.StreamShardingSettings.ClientShardIndex.get -> int
+Vostok.Hercules.Consumers.StreamShardingSettings.Equals(Vostok.Hercules.Consumers.StreamShardingSettings other) -> bool
+Vostok.Hercules.Consumers.StreamShardingSettings.StreamShardingSettings(int clientShardIndex, int clientShardCount) -> void
+Vostok.Hercules.Consumers.StreamTransformer
+Vostok.Hercules.Consumers.StreamTransformer.RunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+Vostok.Hercules.Consumers.StreamTransformer.StreamTransformer(Vostok.Hercules.Consumers.StreamTransformerSettings settings, Vostok.Logging.Abstractions.ILog log) -> void
+Vostok.Hercules.Consumers.StreamTransformerSettings
+Vostok.Hercules.Consumers.StreamTransformerSettings.CoordinatesStorage.get -> Vostok.Hercules.Consumers.IStreamCoordinatesStorage
+Vostok.Hercules.Consumers.StreamTransformerSettings.DelayOnError.get -> System.TimeSpan
+Vostok.Hercules.Consumers.StreamTransformerSettings.DelayOnError.set -> void
+Vostok.Hercules.Consumers.StreamTransformerSettings.DelayOnNoEvents.get -> System.TimeSpan
+Vostok.Hercules.Consumers.StreamTransformerSettings.DelayOnNoEvents.set -> void
+Vostok.Hercules.Consumers.StreamTransformerSettings.EventsReadAttempts.get -> int
+Vostok.Hercules.Consumers.StreamTransformerSettings.EventsReadAttempts.set -> void
+Vostok.Hercules.Consumers.StreamTransformerSettings.EventsReadBatchSize.get -> int
+Vostok.Hercules.Consumers.StreamTransformerSettings.EventsReadBatchSize.set -> void
+Vostok.Hercules.Consumers.StreamTransformerSettings.EventsReadTimeout.get -> System.TimeSpan
+Vostok.Hercules.Consumers.StreamTransformerSettings.EventsReadTimeout.set -> void
+Vostok.Hercules.Consumers.StreamTransformerSettings.EventsWriteBatchSize.get -> int
+Vostok.Hercules.Consumers.StreamTransformerSettings.EventsWriteBatchSize.set -> void
+Vostok.Hercules.Consumers.StreamTransformerSettings.EventsWriteTimeout.get -> System.TimeSpan
+Vostok.Hercules.Consumers.StreamTransformerSettings.EventsWriteTimeout.set -> void
+Vostok.Hercules.Consumers.StreamTransformerSettings.Filter.get -> System.Func<Vostok.Hercules.Client.Abstractions.Events.HerculesEvent, bool>
+Vostok.Hercules.Consumers.StreamTransformerSettings.Filter.set -> void
+Vostok.Hercules.Consumers.StreamTransformerSettings.GateClient.get -> Vostok.Hercules.Client.Abstractions.IHerculesGateClient
+Vostok.Hercules.Consumers.StreamTransformerSettings.MetricContext.get -> Vostok.Metrics.IMetricContext
+Vostok.Hercules.Consumers.StreamTransformerSettings.MetricContext.set -> void
+Vostok.Hercules.Consumers.StreamTransformerSettings.ShardingSettingsProvider.get -> System.Func<Vostok.Hercules.Consumers.StreamShardingSettings>
+Vostok.Hercules.Consumers.StreamTransformerSettings.SourceStreamName.get -> string
+Vostok.Hercules.Consumers.StreamTransformerSettings.StreamClient.get -> Vostok.Hercules.Client.Abstractions.IHerculesStreamClient
+Vostok.Hercules.Consumers.StreamTransformerSettings.StreamTransformerSettings(string sourceStreamName, string targetStreamName, Vostok.Hercules.Client.Abstractions.IHerculesStreamClient streamClient, Vostok.Hercules.Client.Abstractions.IHerculesGateClient gateClient, Vostok.Hercules.Consumers.IStreamCoordinatesStorage coordinatesStorage, System.Func<Vostok.Hercules.Consumers.StreamShardingSettings> shardingSettingsProvider) -> void
+Vostok.Hercules.Consumers.StreamTransformerSettings.TargetStreamName.get -> string
+Vostok.Hercules.Consumers.StreamTransformerSettings.Transformer.get -> System.Func<Vostok.Hercules.Client.Abstractions.Events.HerculesEvent, System.Collections.Generic.IEnumerable<Vostok.Hercules.Client.Abstractions.Events.HerculesEvent>>
+Vostok.Hercules.Consumers.StreamTransformerSettings.Transformer.set -> void
+Vostok.Hercules.Consumers.StreamWriter
+Vostok.Hercules.Consumers.StreamWriter.StreamWriter(Vostok.Hercules.Consumers.StreamWriterSettings settings, Vostok.Logging.Abstractions.ILog log) -> void
+Vostok.Hercules.Consumers.StreamWriter.WriteEvents(System.Collections.Generic.IList<Vostok.Hercules.Client.Abstractions.Events.HerculesEvent> events, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+Vostok.Hercules.Consumers.StreamWriterSettings
+Vostok.Hercules.Consumers.StreamWriterSettings.DelayOnError.get -> System.TimeSpan
+Vostok.Hercules.Consumers.StreamWriterSettings.DelayOnError.set -> void
+Vostok.Hercules.Consumers.StreamWriterSettings.EventsWriteBatchSize.get -> int
+Vostok.Hercules.Consumers.StreamWriterSettings.EventsWriteBatchSize.set -> void
+Vostok.Hercules.Consumers.StreamWriterSettings.EventsWriteTimeout.get -> System.TimeSpan
+Vostok.Hercules.Consumers.StreamWriterSettings.EventsWriteTimeout.set -> void
+Vostok.Hercules.Consumers.StreamWriterSettings.GateClient.get -> Vostok.Hercules.Client.Abstractions.IHerculesGateClient
+Vostok.Hercules.Consumers.StreamWriterSettings.StreamWriterSettings(string targetStreamName, Vostok.Hercules.Client.Abstractions.IHerculesGateClient gateClient) -> void
+Vostok.Hercules.Consumers.StreamWriterSettings.TargetStreamName.get -> string
+Vostok.Hercules.Consumers.WindowedStreamConsumer<T, TKey>
+Vostok.Hercules.Consumers.WindowedStreamConsumer<T, TKey>.WindowedStreamConsumer(Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey> settings, Vostok.Logging.Abstractions.ILog log) -> void
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.CreateWindow.get -> System.Func<TKey, Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.IWindow>
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.IWindow
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.IWindow.Add(T event) -> void
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.IWindow.Flush(System.DateTimeOffset timestamp) -> void
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.KeyProvider.get -> System.Func<T, TKey>
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.Lag.get -> System.TimeSpan
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.Lag.set -> void
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.LagProvider.get -> System.Func<T, System.TimeSpan?>
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.LagProvider.set -> void
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.LeftCoordinatesStorage.get -> Vostok.Hercules.Consumers.IStreamCoordinatesStorage
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.MaximumAllowedLag.get -> System.TimeSpan
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.MaximumAllowedLag.set -> void
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.MaximumAllowedPeriod.get -> System.TimeSpan
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.MaximumAllowedPeriod.set -> void
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.MaximumDeltaAfterNow.get -> System.TimeSpan
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.MaximumDeltaAfterNow.set -> void
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.MaximumDeltaBeforeNow.get -> System.TimeSpan
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.MaximumDeltaBeforeNow.set -> void
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.OnEventDrop.get -> System.Action<T>
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.OnEventDrop.set -> void
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.Period.get -> System.TimeSpan
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.Period.set -> void
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.PeriodProvider.get -> System.Func<T, System.TimeSpan?>
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.PeriodProvider.set -> void
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.TimestampProvider.get -> System.Func<T, System.DateTimeOffset>
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.WindowedStreamConsumerSettings(string streamName, System.Func<string> apiKeyProvider, Vostok.Clusterclient.Core.Topology.IClusterProvider streamApiCluster, System.Func<T, TKey> keyProvider, System.Func<T, System.DateTimeOffset> timestampProvider, System.Func<TKey, Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.IWindow> createWindow, System.Func<Vostok.Hercules.Client.Abstractions.Events.IBinaryEventsReader, Vostok.Hercules.Client.Abstractions.Events.IHerculesEventBuilder<T>> eventBuilderProvider, Vostok.Hercules.Consumers.IStreamCoordinatesStorage leftCoordinatesStorage, Vostok.Hercules.Consumers.IStreamCoordinatesStorage rightCoordinatesStorage, System.Func<Vostok.Hercules.Consumers.StreamShardingSettings> shardingSettingsProvider) -> void
+Vostok.Hercules.Consumers.ZooKeeperCoordinatesStorage
+Vostok.Hercules.Consumers.ZooKeeperCoordinatesStorage.AdvanceAsync(Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates to) -> System.Threading.Tasks.Task
+Vostok.Hercules.Consumers.ZooKeeperCoordinatesStorage.GetCurrentAsync() -> System.Threading.Tasks.Task<Vostok.Hercules.Client.Abstractions.Models.StreamCoordinates>
+Vostok.Hercules.Consumers.ZooKeeperCoordinatesStorage.ZooKeeperCoordinatesStorage(Vostok.Hercules.Consumers.ZooKeeperCoordinatesStorageSettings settings) -> void
+Vostok.Hercules.Consumers.ZooKeeperCoordinatesStorageSettings
+Vostok.Hercules.Consumers.ZooKeeperCoordinatesStorageSettings.Client.get -> Vostok.ZooKeeper.Client.Abstractions.IZooKeeperClient
+Vostok.Hercules.Consumers.ZooKeeperCoordinatesStorageSettings.NodePath.get -> string
+Vostok.Hercules.Consumers.ZooKeeperCoordinatesStorageSettings.ZooKeeperCoordinatesStorageSettings(Vostok.ZooKeeper.Client.Abstractions.IZooKeeperClient client, string nodePath) -> void
