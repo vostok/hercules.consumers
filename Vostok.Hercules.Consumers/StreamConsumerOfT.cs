@@ -11,6 +11,7 @@ using Vostok.Logging.Abstractions;
 using Vostok.Metrics.Grouping;
 using Vostok.Metrics.Primitives.Gauge;
 using Vostok.Metrics.Primitives.Timer;
+using ITimer = Vostok.Metrics.Primitives.Timer.ITimer;
 
 // ReSharper disable MethodSupportsCancellation
 

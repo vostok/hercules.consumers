@@ -19,6 +19,7 @@ using Vostok.Metrics.Primitives.Gauge;
 using Vostok.Metrics.Primitives.Timer;
 using Vostok.Tracing.Abstractions;
 using BinaryBufferReader = Vostok.Hercules.Client.Serialization.Readers.BinaryBufferReader;
+using ITimer = Vostok.Metrics.Primitives.Timer.ITimer;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable MethodSupportsCancellation

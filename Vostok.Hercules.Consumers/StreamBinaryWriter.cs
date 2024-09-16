@@ -15,6 +15,7 @@ using Vostok.Metrics.Grouping;
 using Vostok.Metrics.Primitives.Gauge;
 using Vostok.Metrics.Primitives.Timer;
 using Vostok.Tracing.Abstractions;
+using ITimer = Vostok.Metrics.Primitives.Timer.ITimer;
 
 namespace Vostok.Hercules.Consumers
 {
