@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Confluent.Kafka;
 using JetBrains.Annotations;
 using Vostok.Commons.Binary;
 using Vostok.Commons.Collections;
@@ -62,7 +64,7 @@ namespace Vostok.Hercules.Consumers
             {
                 FetchMinBytes = settings.FetchMinBytes,
                 FetchWaitMaxMs = settings.FetchWaitMaxMs,
-                ConsumeTimeout = this.settings.ConsumeTimeout
+                ConsumeTimeout = settings.ConsumeTimeout
             };
             reader = new KafkaTopicReader(kafkaTopicReaderSettings,
                 log.WithErrorsTransformedToWarns(),
@@ -82,9 +84,6 @@ namespace Vostok.Hercules.Consumers
 
         public async Task RunAsync(CancellationToken cancellationToken)
         {
-            if (useDirectKafkaReader)
-                reader.Assign();
-
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
@@ -139,6 +138,9 @@ namespace Vostok.Hercules.Consumers
                 readTask = null;
 
                 await RestartCoordinates().ConfigureAwait(false);
+
+                if (useDirectKafkaReader)
+                    reader.Assign(coordinates);
 
                 settings.OnRestart?.Invoke(coordinates);
             }

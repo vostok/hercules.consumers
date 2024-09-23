@@ -24,7 +24,6 @@ internal sealed class KafkaTopicReader
     private readonly IConsumer<Ignore, byte[]> consumer;
 
     private static readonly DataSize ReadBufferRentSize = 25.Megabytes(); // Approximate size
-    private static readonly Partition[] Partitions = {0, 99};
 
     public KafkaTopicReader(KafkaTopicReaderSettings settings, ILog log, BufferPool bufferPool)
     {
@@ -46,11 +45,11 @@ internal sealed class KafkaTopicReader
         consumer = builder.Build();
     }
 
-    public void Assign()
+    public void Assign(StreamCoordinates coordinates)
     {
-        consumer.Assign(Partitions.Select(partition => new TopicPartition(settings.Topic, partition)));
+        consumer.Assign(coordinates.Positions.Select(pos => new TopicPartitionOffset(settings.Topic, pos.Partition, pos.Offset)));
 
-        log.Info($"Kafka consumer assigned to topic {settings.Topic} ({Partitions}). " +
+        log.Info($"Kafka consumer assigned to topic {settings.Topic} ({coordinates}). " +
                  $"Fetch min bytes: {settings.FetchMinBytes}, " +
                  $"Fetch wait max ms: {settings.FetchWaitMaxMs}, " +
                  $"Consume timeout ms: {settings.ConsumeTimeout.TotalMilliseconds}"
@@ -128,7 +127,7 @@ internal sealed class KafkaTopicReader
     private Dictionary<Partition, Offset> SeekBeforeRead(StreamCoordinates coordinates)
     {
         var positions = coordinates.Positions
-            .Where(pos => Partitions.Any(partition => partition.Value == pos.Partition))
+            .Where(pos => consumer.Assignment.Any(a => a.Partition == pos.Partition))
             .ToDictionary(
                 pos => new Partition(pos.Partition), 
                 pos => new Offset(pos.Offset - 1)
