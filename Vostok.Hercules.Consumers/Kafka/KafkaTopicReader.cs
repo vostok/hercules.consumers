@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Confluent.Kafka;
@@ -23,7 +24,7 @@ internal sealed class KafkaTopicReader
     private readonly IConsumer<Ignore, byte[]> consumer;
 
     private static readonly DataSize ReadBufferRentSize = 25.Megabytes(); // Approximate size
-    private static readonly Partition Partition = new(0);
+    private static readonly Partition[] Partitions = {0, 99};
 
     public KafkaTopicReader(KafkaTopicReaderSettings settings, ILog log, BufferPool bufferPool)
     {
@@ -47,8 +48,13 @@ internal sealed class KafkaTopicReader
 
     public void Assign()
     {
-        consumer.Assign(new TopicPartition(settings.Topic, Partition));
-        log.Info($"Kafka consumer assigned to topic. Fetch min bytes: {settings.FetchMinBytes}, Fetch wait max ms: {settings.FetchWaitMaxMs}, Consume timeout ms: {settings.ConsumeTimeout.TotalMilliseconds}".ToString());
+        consumer.Assign(Partitions.Select(partition => new TopicPartition(settings.Topic, partition)));
+
+        log.Info($"Kafka consumer assigned to topic {settings.Topic} ({Partitions}). " +
+                 $"Fetch min bytes: {settings.FetchMinBytes}, " +
+                 $"Fetch wait max ms: {settings.FetchWaitMaxMs}, " +
+                 $"Consume timeout ms: {settings.ConsumeTimeout.TotalMilliseconds}"
+        );
     }
 
     public async Task<RawReadStreamResult> ReadAsync(ReadStreamQuery query) =>
@@ -56,7 +62,7 @@ internal sealed class KafkaTopicReader
 
     private RawReadStreamResult ReadInternal(ReadStreamQuery query)
     {
-        var lastConsumedOffset = SeekBeforeRead(query.Coordinates);
+        var positions = SeekBeforeRead(query.Coordinates);
 
         var eventsWriter = new BinaryBufferWriter(bufferPool.Rent((int)ReadBufferRentSize.Bytes))
         {
@@ -74,7 +80,7 @@ internal sealed class KafkaTopicReader
                 throw new Exception();
 
             eventsWriter.WriteWithoutLength(message.Message.Value);
-            lastConsumedOffset = message.Offset;
+            positions[message.Partition] = message.Offset;
             eventsCount++;
 
             while (eventsCount < query.Limit)
@@ -84,7 +90,7 @@ internal sealed class KafkaTopicReader
                     break;
 
                 eventsWriter.WriteWithoutLength(message.Message.Value);
-                lastConsumedOffset = message.Offset;
+                positions[message.Partition] = message.Offset;
                 eventsCount++;
             }
         }
@@ -104,35 +110,35 @@ internal sealed class KafkaTopicReader
             eventsWriter.Write(eventsCount);
         }
 
-
         var rawReadStreamPayload = new RawReadStreamPayload(
             new ValueDisposable<ArraySegment<byte>>(
                 eventsWriter.FilledSegment,
                 new ActionDisposable(() => bufferPool.Return(eventsWriter.Buffer))),
-            new StreamCoordinates(new[]
-            {
-                new StreamPosition
-                {
-                    Partition = Partition,
-                    Offset = lastConsumedOffset + 1 // ?
-                }
-            }));
+            new StreamCoordinates(
+                // offset is incremented because it will be used as inclusive start at next iteration
+                positions
+                    .Select(p => new StreamPosition {Partition = p.Key, Offset = p.Value + 1}) 
+                    .ToArray()
+            ));
+
         log.Info($"ReadInternal.rawReadStreamPayload.Next: {rawReadStreamPayload.Next}");
         return new RawReadStreamResult(HerculesStatus.Success, rawReadStreamPayload);
     }
 
-    private Offset SeekBeforeRead(StreamCoordinates coordinates)
+    private Dictionary<Partition, Offset> SeekBeforeRead(StreamCoordinates coordinates)
     {
-        var position = coordinates.Positions.First(p => p.Partition == Partition);
-        log.Info($"SeekBeforeRead.position: {position}");
-        consumer.Seek(new TopicPartitionOffset(settings.Topic,
-            new Partition(position.Partition),
-            new Offset(position.Offset)));
+        var positions = coordinates.Positions
+            .Where(pos => Partitions.Any(partition => partition.Value == pos.Partition))
+            .ToDictionary(
+                pos => new Partition(pos.Partition), 
+                pos => new Offset(pos.Offset - 1)
+            );
 
-        var lastConsumedOffset = position.Offset - 1; // ?
+        log.Info($"SeekBeforeRead.positions: {positions}");
+        foreach (var position in positions)
+            consumer.Seek(new TopicPartitionOffset(settings.Topic, position.Key, position.Value));
 
-        log.Info($"SeekBeforeRead.lastConsumedOffset: {lastConsumedOffset}");
-        return lastConsumedOffset;
+        return positions;
     }
 
     public void Close()
