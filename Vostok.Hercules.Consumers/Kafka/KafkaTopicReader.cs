@@ -21,7 +21,7 @@ internal sealed class KafkaTopicReader
     private readonly ILog log;
     private readonly BufferPool bufferPool;
 
-    private readonly IConsumer<Ignore, byte[]> consumer;
+    private readonly IConsumer<Ignore, RentedBuffer> consumer;
 
     private static readonly DataSize ReadBufferRentSize = 25.Megabytes(); // Approximate size
 
@@ -41,7 +41,9 @@ internal sealed class KafkaTopicReader
             FetchWaitMaxMs = this.settings.FetchWaitMaxMs
         };
 
-        var builder = new ConsumerBuilder<Ignore, byte[]>(consumerConfig);
+        var builder = new ConsumerBuilder<Ignore, RentedBuffer>(consumerConfig)
+            .SetValueDeserializer(new RentedBufferDeserializer(this.bufferPool));
+
         consumer = builder.Build();
     }
 
@@ -74,23 +76,13 @@ internal sealed class KafkaTopicReader
         {
             // Суть костыля: с нормальным таймаутом читается только первое сообщение из пачки.
             // Остальные либо сразу достаются из буффера, либо сразу получаем null - индикатор конца пачки.
-            var message = consumer.Consume(settings.ConsumeTimeout);
-            if (message?.Message is null)
+            if (!TryConsume(eventsWriter, positions, settings.ConsumeTimeout, ref eventsCount))
                 throw new Exception();
-
-            eventsWriter.WriteWithoutLength(message.Message.Value);
-            positions[message.Partition] = message.Offset;
-            eventsCount++;
 
             while (eventsCount < query.Limit)
             {
-                message = consumer.Consume(TimeSpan.Zero); // TimeSpan.Zero
-                if (message?.Message is null)
+                if (!TryConsume(eventsWriter, positions, TimeSpan.Zero, ref eventsCount))
                     break;
-
-                eventsWriter.WriteWithoutLength(message.Message.Value);
-                positions[message.Partition] = message.Offset;
-                eventsCount++;
             }
         }
         catch (Exception e)
@@ -122,6 +114,30 @@ internal sealed class KafkaTopicReader
 
         log.Info($"ReadInternal.rawReadStreamPayload.Next: {rawReadStreamPayload.Next}");
         return new RawReadStreamResult(HerculesStatus.Success, rawReadStreamPayload);
+    }
+
+    private bool TryConsume(
+        BinaryBufferWriter eventsWriter,
+        Dictionary<Partition, Offset> positions,
+        TimeSpan timeout,
+        ref int eventsCount)
+    {
+        var result = consumer.Consume(timeout);
+        if (result?.Message is null)
+            return false;
+
+        try
+        {
+            eventsWriter.WriteWithoutLength(result.Message.Value.Bytes, 0, result.Message.Value.Length);
+        }
+        finally
+        {
+            result.Message.Value.Return();
+        }
+
+        positions[result.Partition] = result.Offset;
+        eventsCount++;
+        return true;
     }
 
     private Dictionary<Partition, Offset> SeekBeforeRead(StreamCoordinates coordinates)
