@@ -10,3 +10,8 @@ Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.KafkaBootstrapServers
 Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.KafkaBootstrapServers.set -> void
 Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.UseKafka.get -> bool
 Vostok.Hercules.Consumers.BatchesStreamConsumerSettings<T>.UseKafka.set -> void
+Vostok.Hercules.Consumers.Kafka.KafkaBinaryWriter
+Vostok.Hercules.Consumers.Kafka.KafkaBinaryWriter.Dispose() -> void
+Vostok.Hercules.Consumers.Kafka.KafkaBinaryWriter.Flush(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> void
+Vostok.Hercules.Consumers.Kafka.KafkaBinaryWriter.KafkaBinaryWriter(Vostok.Logging.Abstractions.ILog log, Vostok.Metrics.IMetricContext metricContext, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>> producerConfig) -> void
+Vostok.Hercules.Consumers.Kafka.KafkaBinaryWriter.Write(string streamName, byte[] content) -> void
