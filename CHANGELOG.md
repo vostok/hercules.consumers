@@ -1,3 +1,7 @@
+## 2.0.4 (16-12-2024): 
+
+Bump NuGet deps versions
+
 ## 2.0.3 (11-12-2023):
 
 Add null check in `StreamBinaryEventsWriter.FlushAsync` to prevent NRE if there were no calls to `Put`
