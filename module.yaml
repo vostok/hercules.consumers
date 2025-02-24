@@ -7,6 +7,16 @@ notests *default:
 
   install:
     - Vostok.Hercules.Consumers/bin/Release/netstandard2.0/Vostok.Hercules.Consumers.dll
+    - groups:
+        - target-framework: "netstandard2.0"
+          libraries:
+            - Vostok.Hercules.Consumers/bin/Release/netstandard2.0/Vostok.Hercules.Consumers.dll
+        - target-framework: "net6.0"
+          libraries:
+            - Vostok.Hercules.Consumers/bin/Release/net6.0/Vostok.Hercules.Consumers.dll
+        - target-framework: "net8.0"
+          libraries:
+            - Vostok.Hercules.Consumers/bin/Release/net8.0/Vostok.Hercules.Consumers.dll
 
   deps:
     - vostok.configuration
@@ -29,3 +39,16 @@ full-build > notests:
   build:
     target: Vostok.Hercules.Consumers.sln
     configuration: Release
+
+  install:
+    - Vostok.Hercules.Consumers/bin/Release/netstandard2.0/Vostok.Hercules.Consumers.dll
+    - groups:
+        - target-framework: "netstandard2.0"
+          libraries:
+            - Vostok.Hercules.Consumers/bin/Release/netstandard2.0/Vostok.Hercules.Consumers.dll
+        - target-framework: "net6.0"
+          libraries:
+            - Vostok.Hercules.Consumers/bin/Release/net6.0/Vostok.Hercules.Consumers.dll
+        - target-framework: "net8.0"
+          libraries:
+            - Vostok.Hercules.Consumers/bin/Release/net8.0/Vostok.Hercules.Consumers.dll
