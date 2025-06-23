@@ -1,0 +1,2 @@
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.IgnoreEvent.get -> System.Func<T, TKey, bool>
+Vostok.Hercules.Consumers.WindowedStreamConsumerSettings<T, TKey>.IgnoreEvent.set -> void

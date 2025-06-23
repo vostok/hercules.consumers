@@ -34,6 +34,9 @@ namespace Vostok.Hercules.Consumers
             LeftCoordinatesStorage = leftCoordinatesStorage ?? throw new ArgumentNullException(nameof(leftCoordinatesStorage));
         }
 
+        [CanBeNull]
+        public Func<T, TKey, bool> IgnoreEvent { get; set; }
+
         [NotNull]
         public Func<T, TKey> KeyProvider { get; }
 

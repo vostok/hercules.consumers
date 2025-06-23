@@ -175,9 +175,16 @@ namespace Vostok.Hercules.Consumers
             var lag = DateTime.Now - settings.TimestampProvider(@event);
             eventLagMetric.Report(lag);
 
-            if (!windows.ContainsKey(key))
-                windows[key] = new Windows<T, TKey>(key, settings);
-            if (!windows[key].AddEvent(@event, queryCoordinates) && !restart)
+            if (settings.IgnoreEvent?.Invoke(@event, key) == true)
+            {
+                eventsMetric.For("ignored").Increment();
+                return;
+            }
+
+            if (!windows.TryGetValue(key, out var window))
+                windows[key] = window = new Windows<T, TKey>(key, settings);
+
+            if (!window.AddEvent(@event, queryCoordinates) && !restart)
             {
                 settings.OnEventDrop?.Invoke(@event);
                 eventsMetric?.For("dropped").Increment();
