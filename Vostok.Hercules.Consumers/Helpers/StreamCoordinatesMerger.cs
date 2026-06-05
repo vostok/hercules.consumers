@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using Vostok.Hercules.Client.Abstractions.Models;
@@ -12,49 +11,41 @@ namespace Vostok.Hercules.Consumers.Helpers
         [NotNull]
         public static StreamCoordinates MergeMaxWith([NotNull] this StreamCoordinates left, [NotNull] StreamCoordinates right)
         {
-            var map = left.ToDictionary();
-
-            foreach (var position in right.Positions)
-            {
-                if (!map.TryGetValue(position.Partition, out var currentPosition))
+            var result = CoordinatesUtils
+                .Zip(left, right)
+                .Select(x => new StreamPosition
                 {
-                    map[position.Partition] = position;
-                }
-                else
-                {
-                    map[position.Partition] = new StreamPosition
+                    Partition = x.Partition,
+                    Offset = (x.LeftOffset, x.RightOffset) switch
                     {
-                        Partition = position.Partition,
-                        Offset = Math.Max(position.Offset, currentPosition.Offset)
-                    };
-                }
-            }
+                        (null, not null) => x.RightOffset.Value,
+                        (not null, null) => x.LeftOffset.Value,
+                        (not null, not null) => Math.Max(x.LeftOffset.Value, x.RightOffset.Value)
+                    }
+                })
+                .ToArray();
 
-            return new StreamCoordinates(map.Values.ToArray());
+            return new StreamCoordinates(result);
         }
 
         [NotNull]
         public static StreamCoordinates MergeMinWith([NotNull] this StreamCoordinates left, [NotNull] StreamCoordinates right)
         {
-            var map = left.ToDictionary();
-
-            foreach (var position in right.Positions)
-            {
-                if (!map.TryGetValue(position.Partition, out var currentPosition))
+            var result = CoordinatesUtils
+                .Zip(left, right)
+                .Select(x => new StreamPosition
                 {
-                    map[position.Partition] = position;
-                }
-                else
-                {
-                    map[position.Partition] = new StreamPosition
+                    Partition = x.Partition,
+                    Offset = (x.LeftOffset, x.RightOffset) switch
                     {
-                        Partition = position.Partition,
-                        Offset = Math.Min(position.Offset, currentPosition.Offset)
-                    };
-                }
-            }
+                        (null, not null) => x.RightOffset.Value,
+                        (not null, null) => x.LeftOffset.Value,
+                        (not null, not null) => Math.Min(x.LeftOffset.Value, x.RightOffset.Value)
+                    }
+                })
+                .ToArray();
 
-            return new StreamCoordinates(map.Values.ToArray());
+            return new StreamCoordinates(result);
         }
 
         /// <summary>
@@ -62,33 +53,28 @@ namespace Vostok.Hercules.Consumers.Helpers
         /// </summary>
         public static StreamCoordinates FilterBy([NotNull] this StreamCoordinates left, [NotNull] StreamCoordinates right)
         {
-            var map = left.ToDictionary();
-            var result = new List<StreamPosition>();
+            var result = CoordinatesUtils
+                .Zip(left, right)
+                .Where(x => x.LeftOffset != null && x.RightOffset != null)
+                .Select(x => new StreamPosition
+                {
+                    Partition = x.Partition,
+                    Offset = x.LeftOffset.Value
+                })
+                .ToArray();
 
-            foreach (var position in right.Positions)
-            {
-                if (map.TryGetValue(position.Partition, out var was))
-                    result.Add(was);
-            }
-
-            return new StreamCoordinates(result.ToArray());
+            return StreamCoordinates.CreateUnsafe(result);
         }
 
         public static long DistanceTo([NotNull] this StreamCoordinates from, [NotNull] StreamCoordinates to)
         {
-            var map = from.ToDictionary();
             var result = 0L;
-
-            foreach (var position in to.Positions)
+            foreach (var (_, fromOffset, toOffset) in CoordinatesUtils.Zip(from, to))
             {
-                if (map.TryGetValue(position.Partition, out var p))
-                {
-                    result += position.Offset - p.Offset;
-                }
-                else
-                {
-                    result += position.Offset;
-                }
+                if (toOffset is null)
+                    continue;
+
+                result += toOffset.Value - (fromOffset ?? 0);
             }
 
             return result;

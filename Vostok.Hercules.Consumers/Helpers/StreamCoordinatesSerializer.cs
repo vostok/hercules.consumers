@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using JetBrains.Annotations;
@@ -8,28 +9,34 @@ namespace Vostok.Hercules.Consumers.Helpers
 {
     internal static class StreamCoordinatesSerializer
     {
+        private const string Separator = " = ";
+
         [NotNull]
         public static byte[] Serialize([NotNull] StreamCoordinates coordinates)
         {
-            var builder = new StringBuilder();
+            using var stream = new MemoryStream();
+            using var writer = new System.IO.StreamWriter(stream, Encoding.UTF8);
 
             foreach (var position in coordinates.Positions)
             {
-                builder
-                    .Append(position.Partition)
-                    .Append(" = ")
-                    .Append(position.Offset)
-                    .AppendLine();
+                writer.Write(position.Partition);
+                writer.Write(Separator);
+                writer.Write(position.Offset);
+                writer.WriteLine();
             }
 
-            return Encoding.UTF8.GetBytes(builder.ToString());
+            writer.Flush();
+            return stream.ToArray();
         }
 
         [NotNull]
         public static StreamCoordinates Deserialize([CanBeNull] byte[] serialized)
         {
-            var reader = new StringReader(Encoding.UTF8.GetString(serialized ?? new byte[0]));
+            if (serialized is null || serialized.Length == 0)
+                return StreamCoordinates.Empty;
 
+            using var stream = new MemoryStream(serialized);
+            using var reader = new System.IO.StreamReader(stream, Encoding.UTF8);
             var positions = new List<StreamPosition>();
 
             while (true)
@@ -39,15 +46,15 @@ namespace Vostok.Hercules.Consumers.Helpers
                 if (string.IsNullOrEmpty(line))
                     break;
 
-                var separatorIndex = line.IndexOf('=');
+                var separatorIndex = line.IndexOf(Separator, StringComparison.Ordinal);
                 if (separatorIndex <= 0)
                     continue;
 
                 positions.Add(
                     new StreamPosition
                     {
-                        Partition = int.Parse(line.Substring(0, separatorIndex).Trim()),
-                        Offset = long.Parse(line.Substring(separatorIndex + 1).Trim())
+                        Partition = int.Parse(line.Substring(0, separatorIndex)),
+                        Offset = long.Parse(line.Substring(separatorIndex + Separator.Length))
                     });
             }
 

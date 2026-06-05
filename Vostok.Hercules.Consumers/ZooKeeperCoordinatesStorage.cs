@@ -35,53 +35,54 @@ namespace Vostok.Hercules.Consumers
 
             try
             {
-                while (true)
-                {
-                    var getDataResult = await settings.Client.GetDataAsync(settings.NodePath).ConfigureAwait(false);
-
-                    switch (getDataResult.Status)
-                    {
-                        case ZooKeeperStatus.Ok:
-                            var currentCoordinates = StreamCoordinatesSerializer.Deserialize(getDataResult.Data ?? Array.Empty<byte>());
-                            if (!to.AdvancesOver(currentCoordinates))
-                                return;
-
-                            var mergedCoordinates = currentCoordinates.MergeMaxWith(to);
-                            var mergedData = StreamCoordinatesSerializer.Serialize(mergedCoordinates);
-
-                            var setDataRequest = new SetDataRequest(settings.NodePath, mergedData)
-                            {
-                                Version = getDataResult.Stat.Version
-                            };
-
-                            var setDataResult = await settings.Client.SetDataAsync(setDataRequest).ConfigureAwait(false);
-                            if (setDataResult.Status == ZooKeeperStatus.VersionsMismatch)
-                                continue;
-
-                            setDataResult.EnsureSuccess();
-                            break;
-
-                        case ZooKeeperStatus.NodeNotFound:
-                            var createRequest = new CreateRequest(settings.NodePath, CreateMode.Persistent)
-                            {
-                                Data = StreamCoordinatesSerializer.Serialize(to)
-                            };
-                            var createNodeResult = await settings.Client.CreateAsync(createRequest).ConfigureAwait(false);
-                            if (createNodeResult.Status == ZooKeeperStatus.NodeAlreadyExists)
-                                continue;
-
-                            createNodeResult.EnsureSuccess();
-                            break;
-
-                        default:
-                            getDataResult.EnsureSuccess();
-                            break;
-                    }
-                }
+                while (await TryAdvanceOnceAsync(to));
             }
             finally
             {
                 advanceSemaphore.Release();
+            }
+        }
+
+        private async Task<bool> TryAdvanceOnceAsync(StreamCoordinates to)
+        {
+            var getDataResult = await settings.Client.GetDataAsync(settings.NodePath).ConfigureAwait(false);
+
+            switch (getDataResult.Status)
+            {
+                case ZooKeeperStatus.Ok:
+                    var currentCoordinates = StreamCoordinatesSerializer.Deserialize(getDataResult.Data ?? Array.Empty<byte>());
+                    if (!to.AdvancesOver(currentCoordinates))
+                        return true;
+
+                    var mergedCoordinates = currentCoordinates.MergeMaxWith(to);
+                    var mergedData = StreamCoordinatesSerializer.Serialize(mergedCoordinates);
+
+                    var setDataRequest = new SetDataRequest(settings.NodePath, mergedData)
+                    {
+                        Version = getDataResult.Stat.Version
+                    };
+
+                    var setDataResult = await settings.Client.SetDataAsync(setDataRequest).ConfigureAwait(false);
+                    if (setDataResult.Status == ZooKeeperStatus.VersionsMismatch)
+                        return false;
+
+                    setDataResult.EnsureSuccess();
+                    return true;
+                case ZooKeeperStatus.NodeNotFound:
+                    var createRequest = new CreateRequest(settings.NodePath, CreateMode.Persistent)
+                    {
+                        Data = StreamCoordinatesSerializer.Serialize(to)
+                    };
+                    var createNodeResult = await settings.Client.CreateAsync(createRequest).ConfigureAwait(false);
+                    if (createNodeResult.Status == ZooKeeperStatus.NodeAlreadyExists)
+                        return false;
+
+                    createNodeResult.EnsureSuccess();
+                    return true;
+
+                default:
+                    getDataResult.EnsureSuccess();
+                    return false;
             }
         }
     }
