@@ -35,7 +35,7 @@ namespace Vostok.Hercules.Consumers
 
             try
             {
-                while (await TryAdvanceOnceAsync(to));
+                while (await TryAdvanceOnceAsync(to).ConfigureAwait(false));
             }
             finally
             {
