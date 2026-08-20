@@ -77,6 +77,9 @@ namespace Vostok.Hercules.Consumers
                             streamName,
                             result.Status,
                             result.ErrorDetails);
+                        if (result.Status is HerculesStatus.IncorrectRequest)
+                            break;
+
                         await DelayOnError().ConfigureAwait(false);
                     }
                 } while (!result.IsSuccessful);
