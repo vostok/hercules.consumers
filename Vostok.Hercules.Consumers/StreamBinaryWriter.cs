@@ -77,8 +77,12 @@ namespace Vostok.Hercules.Consumers
                             streamName,
                             result.Status,
                             result.ErrorDetails);
+
                         if (result.Status is HerculesStatus.IncorrectRequest)
+                        {
+                            log.Debug("Breaking retry loop");
                             break;
+                        }
 
                         await DelayOnError().ConfigureAwait(false);
                     }
