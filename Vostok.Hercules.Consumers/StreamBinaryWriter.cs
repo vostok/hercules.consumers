@@ -69,20 +69,37 @@ namespace Vostok.Hercules.Consumers
                             CancellationToken.None)
                         .ConfigureAwait(false);
 
-                    if (!result.IsSuccessful)
-                    {
-                        log.Warn(
-                            "Failed to write events to Hercules stream '{StreamName}'. " +
-                            "Status: {Status}. Error: '{Error}'.",
-                            streamName,
-                            result.Status,
-                            result.ErrorDetails);
-                        await DelayOnError().ConfigureAwait(false);
-                    }
+                    if (result.IsSuccessful)
+                        break;
+
+                    log.Warn(
+                        "Failed to write events to Hercules stream '{StreamName}'. " +
+                        "Status: {Status}. Error: '{Error}'.",
+                        streamName,
+                        result.Status,
+                        result.ErrorDetails);
+
+                    if (!IsHerculesStatusRetryable(result))
+                        break;
+
+                    await DelayOnError().ConfigureAwait(false);
                 } while (!result.IsSuccessful);
 
                 LogProgress(streamName, eventsCount);
             }
+
+            return;
+
+            static bool IsHerculesStatusRetryable(InsertEventsResult result) =>
+                result.Status is not
+                    (HerculesStatus.IncorrectRequest or
+                    HerculesStatus.RequestTooLarge or
+                    HerculesStatus.Unauthorized or
+                    HerculesStatus.InsufficientPermissions or
+                    HerculesStatus.StreamAlreadyExists or
+                    HerculesStatus.TimelineAlreadyExists or
+                    HerculesStatus.StreamNotFound or
+                    HerculesStatus.TimelineNotFound);
         }
 
         private void LogProgress(string streamName, int eventsCount)
